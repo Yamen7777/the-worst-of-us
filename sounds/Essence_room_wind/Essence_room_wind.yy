@@ -1,0 +1,26 @@
+{
+  "$GMSound":"v2",
+  "%Name":"Essence_room_wind",
+  "audioGroupId":{
+    "name":"audiogroup_default",
+    "path":"audiogroups/audiogroup_default",
+  },
+  "bitDepth":1,
+  "channelFormat":0,
+  "compression":0,
+  "compressionQuality":4,
+  "conversionMode":0,
+  "duration":18.485012,
+  "exportDir":"",
+  "name":"Essence_room_wind",
+  "parent":{
+    "name":"essance room",
+    "path":"folders/Sounds/essance room.yy",
+  },
+  "preload":false,
+  "resourceType":"GMSound",
+  "resourceVersion":"2.0",
+  "sampleRate":44100,
+  "soundFile":"Essence_room_wind.wav",
+  "volume":1.0,
+}

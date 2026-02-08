@@ -1,0 +1,26 @@
+{
+  "$GMSound":"v2",
+  "%Name":"Essence_room_attract",
+  "audioGroupId":{
+    "name":"audiogroup_default",
+    "path":"audiogroups/audiogroup_default",
+  },
+  "bitDepth":1,
+  "channelFormat":0,
+  "compression":0,
+  "compressionQuality":4,
+  "conversionMode":0,
+  "duration":0.930907,
+  "exportDir":"",
+  "name":"Essence_room_attract",
+  "parent":{
+    "name":"essance room",
+    "path":"folders/Sounds/essance room.yy",
+  },
+  "preload":false,
+  "resourceType":"GMSound",
+  "resourceVersion":"2.0",
+  "sampleRate":44100,
+  "soundFile":"Essence_room_attract.wav",
+  "volume":1.0,
+}

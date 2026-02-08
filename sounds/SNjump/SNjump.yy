@@ -1,0 +1,26 @@
+{
+  "$GMSound":"v2",
+  "%Name":"SNjump",
+  "audioGroupId":{
+    "name":"audiogroup_default",
+    "path":"audiogroups/audiogroup_default",
+  },
+  "bitDepth":1,
+  "channelFormat":0,
+  "compression":0,
+  "compressionQuality":4,
+  "conversionMode":0,
+  "duration":0.59845805,
+  "exportDir":"",
+  "name":"SNjump",
+  "parent":{
+    "name":"characters",
+    "path":"folders/Sounds/characters.yy",
+  },
+  "preload":false,
+  "resourceType":"GMSound",
+  "resourceVersion":"2.0",
+  "sampleRate":44100,
+  "soundFile":"SNjump.wav",
+  "volume":1.0,
+}

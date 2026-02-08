@@ -1,0 +1,1 @@
+TRANS(TRANS_MODE.RESTART,"strawberry");

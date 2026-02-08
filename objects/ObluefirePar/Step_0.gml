@@ -1,0 +1,1 @@
+image_index = Oyokai.blue_spirit;

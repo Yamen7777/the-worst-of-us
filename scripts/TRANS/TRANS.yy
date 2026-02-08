@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"TRANS",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"TRANS",
+  "parent":{
+    "name":"Scripts",
+    "path":"folders/Scripts.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

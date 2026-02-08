@@ -1,0 +1,3 @@
+collistion = false;
+
+trigger = false;

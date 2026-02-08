@@ -1,0 +1,26 @@
+{
+  "$GMSound":"v2",
+  "%Name":"Essence_room_fuse",
+  "audioGroupId":{
+    "name":"audiogroup_default",
+    "path":"audiogroups/audiogroup_default",
+  },
+  "bitDepth":1,
+  "channelFormat":0,
+  "compression":0,
+  "compressionQuality":4,
+  "conversionMode":0,
+  "duration":3.8898413,
+  "exportDir":"",
+  "name":"Essence_room_fuse",
+  "parent":{
+    "name":"essance room",
+    "path":"folders/Sounds/essance room.yy",
+  },
+  "preload":false,
+  "resourceType":"GMSound",
+  "resourceVersion":"2.0",
+  "sampleRate":44100,
+  "soundFile":"Essence_room_fuse.wav",
+  "volume":1.0,
+}

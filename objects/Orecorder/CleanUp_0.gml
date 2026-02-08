@@ -1,0 +1,1 @@
+if (ds_exists(ghostList,ds_type_list)) ds_list_destroy(ghostList);

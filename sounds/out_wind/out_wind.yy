@@ -1,0 +1,26 @@
+{
+  "$GMSound":"v2",
+  "%Name":"out_wind",
+  "audioGroupId":{
+    "name":"audiogroup_default",
+    "path":"audiogroups/audiogroup_default",
+  },
+  "bitDepth":1,
+  "channelFormat":0,
+  "compression":0,
+  "compressionQuality":4,
+  "conversionMode":0,
+  "duration":134.14925,
+  "exportDir":"",
+  "name":"out_wind",
+  "parent":{
+    "name":"characters",
+    "path":"folders/Sounds/characters.yy",
+  },
+  "preload":false,
+  "resourceType":"GMSound",
+  "resourceVersion":"2.0",
+  "sampleRate":44100,
+  "soundFile":"out_wind.wav",
+  "volume":1.0,
+}
