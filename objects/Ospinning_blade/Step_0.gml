@@ -11,3 +11,6 @@ if (point_distance(start_x, start_y, x, y) >= max_distance) {
 if (place_meeting(x, y, Owall)) {
     instance_destroy();
 }
+
+if(!Ocherry.fire_mode) sprite_index = Sspinning_blade;
+if( Ocherry.fire_mode) sprite_index = Sspinning_fire;

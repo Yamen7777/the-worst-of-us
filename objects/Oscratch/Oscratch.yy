@@ -31,10 +31,7 @@
   "resourceType":"GMObject",
   "resourceVersion":"2.0",
   "solid":false,
-  "spriteId":{
-    "name":"Sscratch1",
-    "path":"sprites/Sscratch1/Sscratch1.yy",
-  },
+  "spriteId":null,
   "spriteMaskId":null,
   "visible":true,
 }

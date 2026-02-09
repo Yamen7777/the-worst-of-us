@@ -150,6 +150,7 @@ if instance_exists(_topWall)
 //state
 STATE();
 
+if(keyboard_check_pressed(vk_tab)) fire_mode = !fire_mode;
 
 if(sprite_index = ScabeD) and (!dead)
 {

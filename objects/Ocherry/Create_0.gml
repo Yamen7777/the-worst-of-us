@@ -9,9 +9,11 @@ global.show_collision_mask = false;
 //effects 
 trail_timer = 0;
 
-//health / damage
+//health
 hp = 100;
 hitstun_time = 0; // frames of stun / invincibility after taking damage
+
+fire_mode = false;
 
 //moving
 face = 1;
@@ -806,10 +808,14 @@ STATE_FREE = function()
 	        // Create crouch attack slash
 	        if(face ==  1) var _bladeX =  60;
 	        if(face == -1) var _bladeX = -60;
-	        with(instance_create_layer(Ocherry.x+_bladeX, Ocherry.y-140, "bullets", Oslash)) 
+			
+	        if(!fire_mode) var _sprite = Sslash1;
+	        if( fire_mode) var _sprite = SslashFire1;
+	        with(instance_create_layer(Ocherry.x+_bladeX, Ocherry.y-80, "bullets", Oslash)) 
 	        {
-	            sprite_index = Sslash1; // You can change this to a specific crouch slash sprite if you have one
+	            sprite_index = _sprite;
 	            image_xscale = other.face;
+	            image_yscale = -1;
 	        }
         
 	        // Play crouch attack sound
@@ -825,11 +831,14 @@ STATE_FREE = function()
 	        attack_timer = attack_air_duration;
         
 	        // Create air attack slash
-	        if(face ==  1) var _bladeX =  60;
-	        if(face == -1) var _bladeX = -60;
+	        if(face ==  1) var _bladeX =  100;
+	        if(face == -1) var _bladeX = -100;
+			
+			if(!fire_mode) var _sprite = Sslash1;
+	        if( fire_mode) var _sprite = SslashFire1;
 	        with(instance_create_layer(Ocherry.x+_bladeX, Ocherry.y-140, "bullets", Oslash)) 
 	        {
-	            sprite_index = Sslash1; // You can change this to a specific air slash sprite if you have one
+	            sprite_index = _sprite; // You can change this to a specific air slash sprite if you have one
 	            image_xscale = other.face;
 	        }
         
@@ -896,11 +905,14 @@ STATE_FREE = function()
 	        queued_attack2 = false;
 	        queued_attack3 = false;
 	        //create attack 1 slash
-	        if(face ==  1) var _bladeX =  60;
-	        if(face == -1) var _bladeX = -60;
-	        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
+	        if(face ==  1) var _bladeX =  150;
+	        if(face == -1) var _bladeX = -150;
+			
+			if(!fire_mode) var _sprite = Sslash1;
+	        if( fire_mode) var _sprite = SslashFire1;
+	        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-180,"bullets",Oslash)) 
 	        {
-	            sprite_index = Sslash1;
+	            sprite_index = _sprite;
 	            image_xscale = other.face;
 	        }
 	        // Play attack 1 sound
@@ -944,12 +956,16 @@ STATE_FREE = function()
 	        combo_window_timer = combo_window_start;
 	        queued_attack2 = false;
 	        //create attack 2 slash
-	        if(face ==  1) var _bladeX =  85;
-	        if(face == -1) var _bladeX = -85;
+	        if(face ==  1) var _bladeX =  130;
+	        if(face == -1) var _bladeX = -130;
+			
+			if(!fire_mode) var _sprite = Sslash2;
+	        if( fire_mode) var _sprite = SslashFire2;
 	        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
 	        {
-	            sprite_index = Sslash2;
+	            sprite_index = _sprite;
 	            image_xscale = other.face;
+				image_angle += 125*other.face;
 	        }
 	        // Play attack 2 sound
 	        audio_sound_pitch(SNsword,random_range(1,1.2));
@@ -982,11 +998,14 @@ STATE_FREE = function()
 	        attack_timer = attack3_duration;
 	        queued_attack3 = false;
 	        //create attack 3 slash
-	        if(face ==  1) var _bladeX =  60;
-	        if(face == -1) var _bladeX = -60;
+	        if(face ==  1) var _bladeX =  170;
+	        if(face == -1) var _bladeX = -170;
+			
+			if(!fire_mode) var _sprite = Sslash3;
+	        if( fire_mode) var _sprite = SslashFire3;
 	        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
 	        {
-	            sprite_index = Sslash3;
+	            sprite_index = _sprite;
 	            image_xscale = other.face;
 	        }
 	        // Play attack 3 sound
@@ -1031,7 +1050,7 @@ STATE_FREE = function()
 	    spell1_cooldown = spell1_cooldown_max; // START COOLDOWN IMMEDIATELY
 	    hsp = 0;
 	}
-
+	
 	// SPELL 1 ACTIVE - Cast projectile at specific frame
 	if (spell1_active && spell1_timer > 0) {
 	    // Cast at frame 5 (when timer reaches the attack frame)
@@ -1039,11 +1058,14 @@ STATE_FREE = function()
 	        // Create spell projectile
 	        if(face == 1) var _bladeX = 75;
 	        if(face == -1) var _bladeX = -75;
-	        instance_create_layer(x + _bladeX, y - 175, "bullets", Ospinning_blade);
+	        with(instance_create_layer(x + _bladeX, y - 165, "bullets", Ofireball))
+			{
+				image_xscale = other.face;
+			}
         
 	        // Play spell sound
-	        audio_sound_pitch(SNsword, random_range(0.8, 1));
-	        audio_play_sound(SNsword, 1, false);
+		    audio_sound_pitch(SNfire,random_range(0.7,0.8));
+		    audio_play_sound(SNfire, 4, false);
         
 	        spell1_attacked = true;
 	    }
@@ -1070,13 +1092,13 @@ STATE_FREE = function()
 	    // Cast at frame 2 (when timer reaches the attack frame)
 	    if (spell2_timer == spell2_duration - spell_attack_frame2 && !spell2_attacked) {
 	        // Create spell projectile
-	        if(face == 1) var _bladeX = 75;
-	        if(face == -1) var _bladeX = -75;
-	        instance_create_layer(x + _bladeX, y - 175, "bullets", Ospinning_blade);
+	        if(face == 1) var _bladeX = 120;
+	        if(face == -1) var _bladeX = -120;
+	        instance_create_layer(x + _bladeX, y - 190, "bullets", OfireBreath);
         
 	        // Play spell sound
-	        audio_sound_pitch(SNsword, random_range(0.6, 0.9));
-	        audio_play_sound(SNsword, 1, false);
+	        audio_sound_pitch(SNfire,random_range(0.7,0.8));
+		    audio_play_sound(SNfire, 4, false);
         
 	        spell2_attacked = true;
 	    }
@@ -1108,8 +1130,8 @@ STATE_FREE = function()
 	        instance_create_layer(x + _bladeX, y - 175, "bullets", Ospinning_blade);
         
 	        // Play spell sound
-	        audio_sound_pitch(SNsword, random_range(0.5, 0.7));
-	        audio_play_sound(SNsword, 1, false);
+	        audio_sound_pitch(SNfire,random_range(0.7,0.8));
+		    audio_play_sound(SNfire, 4, false);
         
 	        spell3_attacked = true;
 	    }
@@ -1392,8 +1414,6 @@ STATE_DASH = function()
 		    {
 		        image_blend = c_orange;
 		        image_alpha = 0.6;
-        
-		        fade_speed = 0.08; // Faster fade
 		    }
 			
 		    with (instance_create_depth(trail_x, trail_y, depth+1, Otrail))
