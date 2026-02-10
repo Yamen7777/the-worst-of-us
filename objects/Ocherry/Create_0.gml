@@ -842,7 +842,7 @@ STATE_FREE = function()
 	D_inputs = right or left or up or down;
 	
 	dashing = false;
-	if (dash and canDash and !sliding_ground) 
+	if (dash and canDash and !sliding_ground and ObloodPar.blood >= 10) 
 	{
 		screenShake(25,8);
 		dashing = true;
@@ -858,12 +858,13 @@ STATE_FREE = function()
 	    } else {
 	        // No input, dash in the direction the sprite is facing
 	        dashDirection = (face == -1) ? 180 : 0; 
-	    }
+	    } 
 
 	    dashSPD = dashDistance / dashTime;
 	    dashEnergy = dashDistance;
 	    STATE = STATE_DASH;
 		dashed = true;
+		ObloodPar.blood -= 10;
 	}
 	
 	//dash cooldown
@@ -893,9 +894,11 @@ STATE_FREE = function()
 		}
 	
 		//blade par
-		if(!instance_exists(ObladePar))
+		if(!instance_exists(ObloodPar))
 		{
-			instance_create_layer(440,300,layer,ObladePar);
+			with instance_create_depth(475,360,301,ObloodPar) sprite_index = SbloodPar1;
+			with instance_create_depth(507,355,301,ObloodPar) sprite_index = SbloodPar2;
+			with instance_create_depth(475,360,301,ObloodPar) sprite_index = SbloodPar3;
 		}
 		
 		//spell 1
@@ -1178,7 +1181,7 @@ STATE_FREE = function()
 	    attack3 = false;
 	    cooldown_timer = cooldown_duration; // Start 30 frame cooldown
 	}
-	
+
 	// SPELL SYSTEM
 	// Decrease spell timers
 	if (spell1_timer > 0) spell1_timer--;
@@ -1192,16 +1195,22 @@ STATE_FREE = function()
 	// Update attack flag to include spells
 	attack = (attack1 || attack2 || attack3 || attack_crouch || attack_air || spell1_active || spell2_active || spell3_active || attack_timer > 0);
 
-	// SPELL 1 - Q
+	// SPELL 1 - Q (Costs 50 blood)
 	if (spell1 && !spell1_active && !spell2_active && !spell3_active && spell1_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground) {
-	    spell1_active = true;
-	    spell1_started = true;
-	    spell1_timer = spell1_duration;
-	    spell1_attacked = false;
-	    spell1_cooldown = spell1_cooldown_max; // START COOLDOWN IMMEDIATELY
-	    hsp = 0;
+	    // Check if player has enough blood
+	    if (instance_exists(ObloodPar) && ObloodPar.blood >= 50) {
+	        spell1_active = true;
+	        spell1_started = true;
+	        spell1_timer = spell1_duration;
+	        spell1_attacked = false;
+	        spell1_cooldown = spell1_cooldown_max; // START COOLDOWN IMMEDIATELY
+	        hsp = 0;
+        
+	        // Consume blood
+	        ObloodPar.blood -= 50;
+	    }
 	}
-	
+
 	// SPELL 1 ACTIVE - Cast projectile at specific frame
 	if (spell1_active && spell1_timer > 0) {
 	    // Cast at frame 5 (when timer reaches the attack frame)
@@ -1210,13 +1219,13 @@ STATE_FREE = function()
 	        if(face == 1) var _bladeX = 75;
 	        if(face == -1) var _bladeX = -75;
 	        with(instance_create_layer(x + _bladeX, y - 165, "bullets", Ofireball))
-			{
-				image_xscale = other.face;
-			}
+	        {
+	            image_xscale = other.face;
+	        }
         
 	        // Play spell sound
-		    audio_sound_pitch(SNfire,random_range(0.7,0.8));
-		    audio_play_sound(SNfire, 4, false);
+	        audio_sound_pitch(SNfire,random_range(0.7,0.8));
+	        audio_play_sound(SNfire, 4, false);
         
 	        spell1_attacked = true;
 	    }
@@ -1228,14 +1237,20 @@ STATE_FREE = function()
 	    // Cooldown already started when spell was cast
 	}
 
-	// SPELL 2 - E
+	// SPELL 2 - E (Costs 75 blood)
 	if (spell2 && !spell1_active && !spell2_active && !spell3_active && spell2_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground) {
-	    spell2_active = true;
-	    spell2_started = true;
-	    spell2_timer = spell2_duration;
-	    spell2_attacked = false;
-	    spell2_cooldown = spell2_cooldown_max; // START COOLDOWN IMMEDIATELY
-	    hsp = 0;
+	    // Check if player has enough blood
+	    if (instance_exists(ObloodPar) && ObloodPar.blood >= 75) {
+	        spell2_active = true;
+	        spell2_started = true;
+	        spell2_timer = spell2_duration;
+	        spell2_attacked = false;
+	        spell2_cooldown = spell2_cooldown_max; // START COOLDOWN IMMEDIATELY
+	        hsp = 0;
+        
+	        // Consume blood
+	        ObloodPar.blood -= 75;
+	    }
 	}
 
 	// SPELL 2 ACTIVE - Cast projectile at specific frame
@@ -1249,7 +1264,7 @@ STATE_FREE = function()
         
 	        // Play spell sound
 	        audio_sound_pitch(SNfire,random_range(0.7,0.8));
-		    audio_play_sound(SNfire, 4, false);
+	        audio_play_sound(SNfire, 4, false);
         
 	        spell2_attacked = true;
 	    }
@@ -1261,14 +1276,20 @@ STATE_FREE = function()
 	    // Cooldown already started when spell was cast
 	}
 
-	// SPELL 3 - R
+	// SPELL 3 - R (Costs 100 blood)
 	if (spell3 && !spell1_active && !spell2_active && !spell3_active && spell3_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground) {
-	    spell3_active = true;
-	    spell3_started = true;
-	    spell3_timer = spell3_duration;
-	    spell3_attacked = false;
-	    spell3_cooldown = spell3_cooldown_max; // START COOLDOWN IMMEDIATELY
-	    hsp = 0;
+	    // Check if player has enough blood
+	    if (instance_exists(ObloodPar) && ObloodPar.blood >= 100) {
+	        spell3_active = true;
+	        spell3_started = true;
+	        spell3_timer = spell3_duration;
+	        spell3_attacked = false;
+	        spell3_cooldown = spell3_cooldown_max; // START COOLDOWN IMMEDIATELY
+	        hsp = 0;
+        
+	        // Consume blood
+	        ObloodPar.blood -= 100;
+	    }
 	}
 
 	// SPELL 3 ACTIVE - Cast projectile at specific frame
@@ -1282,7 +1303,7 @@ STATE_FREE = function()
         
 	        // Play spell sound
 	        audio_sound_pitch(SNfire,random_range(0.7,0.8));
-		    audio_play_sound(SNfire, 4, false);
+	        audio_play_sound(SNfire, 4, false);
         
 	        spell3_attacked = true;
 	    }

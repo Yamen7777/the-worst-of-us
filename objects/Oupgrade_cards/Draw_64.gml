@@ -1,3 +1,9 @@
+// At the top of Draw GUI Event
+if (card_state == "selected") {
+    show_debug_message("DRAW GUI - Card exists, state: " + card_state + " timer: " + string(animation_timer));
+}
+
+
 // Draw GUI Event
 // Get camera dimensions
 var cam_width = camera_get_view_width(view_camera[0]);
@@ -10,7 +16,7 @@ draw_sprite_ext(sprite_index, image_index, x, y, hover_scale, hover_scale, 0, c_
 draw_set_halign(fa_center);
 draw_set_valign(fa_middle);
 draw_set_color(c_orange);
-draw_set_font(Fm5x7);
+draw_set_font(Fm5x7M);
 
 var display_name = "";
 switch(upgrade_type) {

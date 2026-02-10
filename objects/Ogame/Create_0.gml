@@ -391,17 +391,14 @@ show_upgrade_cards = function() {
     }
     
     // Create the upgrade cards in GUI space
-    // Camera dimensions: 3733 x 2240
-    // Card dimensions: 594 x 1000
     var gui_width = 3733;
     var gui_height = 2240;
-    var card_width = 594;
     
     var screen_center_x = gui_width / 2;
     var screen_center_y = gui_height / 2;
     
-    // Spacing between cards (increased for your large camera)
-    var card_spacing = 900; // Increased spacing to account for 594px wide cards
+    // Spacing between cards
+    var card_spacing = 750;
     var total_width = (num_cards - 1) * card_spacing;
     var start_x = screen_center_x - (total_width / 2);
     
@@ -409,7 +406,7 @@ show_upgrade_cards = function() {
     for (var i = 0; i < num_cards; i++) {
         var card = instance_create_layer(start_x + (i * card_spacing), screen_center_y, "Instances", Oupgrade_cards);
         card.upgrade_type = shuffled[i];
-        card.depth = -9999; // Make sure cards are on top
+        card.depth = -9999;
         
         // Set sprite based on upgrade type
         switch(shuffled[i]) {
@@ -434,31 +431,25 @@ show_upgrade_cards = function() {
     showing_upgrade_cards = true;
     upgrade_cards_created = true;
     
-    // Pause the game
+    // FREEZE PLAYER COMPLETELY - disable controls AND freeze movement
     if (instance_exists(Ocherry)) {
         Ocherry.STATE = Ocherry.STATE_PAUSE;
     }
 }
 
-// Function to hide all upgrade cards
+// Function to hide all upgrade cards (only used for cleanup, not during animation)
 hide_upgrade_cards = function() {
-    // Only destroy cards if not animating
-    if (!upgrade_cards_animating) {
-        with (Oupgrade_cards) {
-            instance_destroy();
-        }
-        
-        showing_upgrade_cards = false;
-        upgrade_cards_created = false;
-        
-        // Unpause the game
-        if (instance_exists(Ocherry)) {
-            Ocherry.STATE = Ocherry.STATE_FREE;
-        }
-    } else {
-        // Just mark that we're done showing cards (but keep animating)
-        showing_upgrade_cards = false;
-        upgrade_cards_created = false;
+    with (Oupgrade_cards) {
+        instance_destroy();
+    }
+    
+    showing_upgrade_cards = false;
+    upgrade_cards_created = false;
+    upgrade_cards_animating = false;
+    
+    // RE-ENABLE CONTROLS AND MOVEMENT
+    if (instance_exists(Ocherry)) {
+        Ocherry.STATE = Ocherry.STATE_FREE;
     }
 }
 

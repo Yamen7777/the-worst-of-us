@@ -164,6 +164,11 @@ if (keyboard_check_pressed(ord("L"))) {
     level_up();
 }
 
+// TEST: Press K to increase blood
+if (keyboard_check_pressed(ord("K"))) {
+    ObloodPar.blood += 50;
+}
+
 //check if we are crushed 
 if place_meeting(x,y,Owall)
 {
