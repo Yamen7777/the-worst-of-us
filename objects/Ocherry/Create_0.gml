@@ -904,6 +904,7 @@ STATE_FREE = function()
 			with (instance_create_layer(460,400,layer,Ospell_icon)) sprite_index = Sspell1;
 			with (instance_create_layer(560,400,layer,Ospell_icon)) sprite_index = Sspell2;
 			with (instance_create_layer(660,400,layer,Ospell_icon)) sprite_index = Sspell3;
+			with (instance_create_layer(800,400,layer,Ospell_icon)) sprite_index = Sspell_dash;
 		}
 	}
 	
