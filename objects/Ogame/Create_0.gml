@@ -348,5 +348,117 @@ tutorial_finish_timer = 0;
 current_character = "";
 
 
+// Upgrade card system
+showing_upgrade_cards = false;
+upgrade_cards_created = false;
+upgrade_cards_animating = false;
 
+// Function to show upgrade cards when player levels up
+show_upgrade_cards = function() {
+    if (!instance_exists(Ocherry)) return;
+    
+    // Get list of available upgrades (not maxed)
+    var available_upgrades = [];
+    
+    if (Ocherry.upgrade_attack < Ocherry.max_upgrade_level) {
+        array_push(available_upgrades, "attack");
+    }
+    if (Ocherry.upgrade_defence < Ocherry.max_upgrade_level) {
+        array_push(available_upgrades, "defence");
+    }
+    if (Ocherry.upgrade_range < Ocherry.max_upgrade_level) {
+        array_push(available_upgrades, "range");
+    }
+    if (Ocherry.upgrade_speed < Ocherry.max_upgrade_level) {
+        array_push(available_upgrades, "speed");
+    }
+    if (Ocherry.upgrade_spell < Ocherry.max_upgrade_level) {
+        array_push(available_upgrades, "spell");
+    }
+    
+    // Determine how many cards to show (max 3, but only show what's available)
+    var num_cards = min(3, array_length(available_upgrades));
+    
+    if (num_cards == 0) return; // No upgrades available
+    
+    // Shuffle available upgrades
+    var shuffled = available_upgrades;
+    for (var i = array_length(shuffled) - 1; i > 0; i--) {
+        var j = irandom(i);
+        var temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
+    }
+    
+    // Create the upgrade cards in GUI space
+    // Camera dimensions: 3733 x 2240
+    // Card dimensions: 594 x 1000
+    var gui_width = 3733;
+    var gui_height = 2240;
+    var card_width = 594;
+    
+    var screen_center_x = gui_width / 2;
+    var screen_center_y = gui_height / 2;
+    
+    // Spacing between cards (increased for your large camera)
+    var card_spacing = 900; // Increased spacing to account for 594px wide cards
+    var total_width = (num_cards - 1) * card_spacing;
+    var start_x = screen_center_x - (total_width / 2);
+    
+    // Create cards
+    for (var i = 0; i < num_cards; i++) {
+        var card = instance_create_layer(start_x + (i * card_spacing), screen_center_y, "Instances", Oupgrade_cards);
+        card.upgrade_type = shuffled[i];
+        card.depth = -9999; // Make sure cards are on top
+        
+        // Set sprite based on upgrade type
+        switch(shuffled[i]) {
+            case "attack":
+                card.sprite_index = Supgrade_damage;
+                break;
+            case "defence":
+                card.sprite_index = Supgrade_defence;
+                break;
+            case "range":
+                card.sprite_index = Supgrade_range;
+                break;
+            case "speed":
+                card.sprite_index = Supgrade_swiftness;
+                break;
+            case "spell":
+                card.sprite_index = Supgrade_energy;
+                break;
+        }
+    }
+    
+    showing_upgrade_cards = true;
+    upgrade_cards_created = true;
+    
+    // Pause the game
+    if (instance_exists(Ocherry)) {
+        Ocherry.STATE = Ocherry.STATE_PAUSE;
+    }
+}
+
+// Function to hide all upgrade cards
+hide_upgrade_cards = function() {
+    // Only destroy cards if not animating
+    if (!upgrade_cards_animating) {
+        with (Oupgrade_cards) {
+            instance_destroy();
+        }
+        
+        showing_upgrade_cards = false;
+        upgrade_cards_created = false;
+        
+        // Unpause the game
+        if (instance_exists(Ocherry)) {
+            Ocherry.STATE = Ocherry.STATE_FREE;
+        }
+    } else {
+        // Just mark that we're done showing cards (but keep animating)
+        showing_upgrade_cards = false;
+        upgrade_cards_created = false;
+    }
+}
 

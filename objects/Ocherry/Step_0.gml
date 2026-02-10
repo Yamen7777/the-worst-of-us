@@ -159,6 +159,11 @@ if(sprite_index = ScabeD) and (!dead)
 	audio_play_sound(SNdeath,10,false);
 }
 
+// TEST: Press L to level up
+if (keyboard_check_pressed(ord("L"))) {
+    level_up();
+}
+
 //check if we are crushed 
 if place_meeting(x,y,Owall)
 {

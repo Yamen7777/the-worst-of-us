@@ -10,7 +10,7 @@ invincible = false;
 invincible_time = 20;
 invincible_timer = invincible_time;
 // List of all damaging objects
-damage_objects = [Ospinning_blade, Oblade_back, Oblue_fire, Oblue_explode, Oscratch, Otransform, Oslash, Ofireball, OfireExplode];
+damage_objects = [Ospinning_blade, Oblade_back, Oblue_fire, Oblue_explode, Oscratch, Otransform, Oslash, Ofireball, OfireExplode, OfireBreath];
 // Attack system
 attacking = false;
 attack_cooldown = 0;
@@ -39,4 +39,4 @@ dodge_cooldown_time = 90;
 dodge_chance = 0.6;
 dodge_invincible = false;
 // Ranged attack objects that can be dodged
-dodgeable_objects = [Ospinning_blade, Oblade_back, Oblue_fire, Oscratch];
+dodgeable_objects = [Ospinning_blade, Oblade_back, Oblue_fire, Oscratch,];

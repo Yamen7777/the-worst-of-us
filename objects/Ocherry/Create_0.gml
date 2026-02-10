@@ -193,6 +193,145 @@ dash_sound_interval = 5; // Play sound every 5 frames (quarter second at 60fps)
 base_pitch = 0.8;         // Base pitch for the sound
 max_pitch = 2;          // Maximum pitch when dash_collect reaches 50
 
+
+// LEVEL SYSTEM
+player_level = 0;
+max_level = 25;
+available_upgrade_points = 0;
+
+// Upgrade categories (0-5 each)
+upgrade_attack = 0;
+upgrade_speed = 0;
+upgrade_range = 0;
+upgrade_defence = 0;
+upgrade_spell = 0;
+
+max_upgrade_level = 5;
+
+// Base stats (level 0 values)
+base_damage = 10;
+base_speed = 25;
+base_run_speed = 35;
+base_range = 1.0; // Multiplier for attack range
+base_defence = 0; // Damage reduction
+base_spell_power = 1.0; // Spell damage multiplier
+base_spell_cooldown = 1.0; // Spell cooldown multiplier
+
+// Current stats (calculated from base + upgrades)
+current_damage = base_damage;
+current_speed = base_speed;
+current_run_speed = base_run_speed;
+current_range = base_range;
+current_defence = base_defence;
+current_spell_power = base_spell_power;
+current_spell_cooldown = base_spell_cooldown;
+
+// Upgrade increments (how much each upgrade level adds)
+attack_damage_per_level = 5; // +5 damage per level
+speed_boost_per_level = 3; // +3 speed per level
+run_speed_boost_per_level = 5; // +5 run speed per level
+range_multiplier_per_level = 0.2; // +20% range per level
+defence_reduction_per_level = 2; // -2 damage taken per level (max 10 reduction at level 5)
+spell_power_per_level = 0.3; // +30% spell damage per level
+spell_cooldown_reduction_per_level = 0.15; // -15% cooldown per level (max 75% reduction)
+
+// Function to level up
+level_up = function() {
+    if (player_level < max_level) {
+        player_level++;
+        available_upgrade_points++;
+        
+        // Show upgrade cards
+        if (instance_exists(Ogame)) {
+            Ogame.show_upgrade_cards();
+        }
+        
+        // Play level up sound/effect
+        // audio_play_sound(SNlevelup, 1, false);
+        
+        return true;
+    }
+    return false;
+}
+
+// Function to upgrade a specific stat
+upgrade_stat = function(_stat_type) {
+    if (available_upgrade_points <= 0) return false;
+    
+    var upgraded = false;
+    
+    switch(_stat_type) {
+        case "attack":
+            if (upgrade_attack < max_upgrade_level) {
+                upgrade_attack++;
+                upgraded = true;
+            }
+            break;
+            
+        case "speed":
+            if (upgrade_speed < max_upgrade_level) {
+                upgrade_speed++;
+                upgraded = true;
+            }
+            break;
+            
+        case "range":
+            if (upgrade_range < max_upgrade_level) {
+                upgrade_range++;
+                upgraded = true;
+            }
+            break;
+            
+        case "defence":
+            if (upgrade_defence < max_upgrade_level) {
+                upgrade_defence++;
+                upgraded = true;
+            }
+            break;
+            
+        case "spell":
+            if (upgrade_spell < max_upgrade_level) {
+                upgrade_spell++;
+                upgraded = true;
+            }
+            break;
+    }
+    
+    if (upgraded) {
+        available_upgrade_points--;
+        calculate_stats(); // Recalculate all stats
+        return true;
+    }
+    
+    return false;
+}
+
+// Function to calculate current stats based on upgrades
+calculate_stats = function() {
+    // Attack damage
+    current_damage = base_damage + (upgrade_attack * attack_damage_per_level);
+    
+    // Speed
+    current_speed = base_speed + (upgrade_speed * speed_boost_per_level);
+    current_run_speed = base_run_speed + (upgrade_speed * run_speed_boost_per_level);
+    
+    // Range (multiplicative)
+    current_range = base_range + (upgrade_range * range_multiplier_per_level);
+    
+    // Defence (damage reduction)
+    current_defence = upgrade_defence * defence_reduction_per_level;
+    
+    // Spell power (multiplicative)
+    current_spell_power = base_spell_power + (upgrade_spell * spell_power_per_level);
+    
+    // Spell cooldown reduction (multiplicative, capped at 75% reduction)
+    var cooldown_reduction = min(upgrade_spell * spell_cooldown_reduction_per_level, 0.75);
+    current_spell_cooldown = base_spell_cooldown - cooldown_reduction;
+}
+
+// Initialize stats
+calculate_stats();
+
 // Set default spawn if none exists
 if (global.spawn_x == -1) {
     global.spawn_x = xstart;  // Your initial spawn position
@@ -758,6 +897,14 @@ STATE_FREE = function()
 		{
 			instance_create_layer(440,300,layer,ObladePar);
 		}
+		
+		//spell 1
+		if(!instance_exists(Ospell_icon))
+		{
+			with (instance_create_layer(460,400,layer,Ospell_icon)) sprite_index = Sspell1;
+			with (instance_create_layer(560,400,layer,Ospell_icon)) sprite_index = Sspell2;
+			with (instance_create_layer(660,400,layer,Ospell_icon)) sprite_index = Sspell3;
+		}
 	}
 	
 	// Blocking
@@ -867,7 +1014,7 @@ STATE_FREE = function()
 	        hold_time++;
         
 	        //hold the sprite
-	        image_index = 1;
+	        image_index = 0;
 	        // Cap at max blades
 	        if (hold_time >= hold_blade * max_blades) {
 	            hold_time = hold_blade * max_blades; // Stop increasing at 9 blades worth
@@ -884,9 +1031,12 @@ STATE_FREE = function()
 	            blade_release = min(floor(hold_time / hold_blade), max_blades); // Cap at max_blades
 	            if(face ==  1) var _bladeX =  60;
 	            if(face == -1) var _bladeX = -60;
+				
+				if(!fire_mode) var _sprite = Sslash1;
+			    if( fire_mode) var _sprite = SslashFire1;
 	            with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
 	            {
-	                sprite_index = Sslash4;
+	                sprite_index = _sprite;
 	                image_xscale = other.face;
 	            }
 	            // Play attack 4 sound
@@ -895,7 +1045,7 @@ STATE_FREE = function()
 	        }
 	        hold_time = 0;
 	    }
-	    if(image_index == 5) hold_attack = false;
+	    if(image_index == 3) hold_attack = false;
 	    //normal attack
 	    if (LMB) {
 	        attack1 = true;
@@ -1127,7 +1277,7 @@ STATE_FREE = function()
 	        // Create spell projectile
 	        if(face == 1) var _bladeX = 75;
 	        if(face == -1) var _bladeX = -75;
-	        instance_create_layer(x + _bladeX, y - 175, "bullets", Ospinning_blade);
+	        instance_create_layer(x + _bladeX, y - 175, "bullets", Ofireball);
         
 	        // Play spell sound
 	        audio_sound_pitch(SNfire,random_range(0.7,0.8));
