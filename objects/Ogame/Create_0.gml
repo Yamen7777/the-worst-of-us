@@ -356,6 +356,13 @@ upgrade_cards_animating = false;
 show_upgrade_cards = function() {
     if (!instance_exists(Ocherry)) return;
     
+    // FREEZE PLAYER FIRST - BEFORE ANYTHING ELSE
+    Ocherry.hsp = 0;
+    Ocherry.vsp = 0;
+    Ocherry.hasControl = false;
+    Ocherry.Cpause = true;
+    Ocherry.STATE = Ocherry.STATE_PAUSE;
+    
     // Get list of available upgrades (not maxed)
     var available_upgrades = [];
     
@@ -400,14 +407,6 @@ show_upgrade_cards = function() {
     var card_spacing = 750;
     var total_width = (num_cards - 1) * card_spacing;
     var start_x = screen_center_x - (total_width / 2);
-    
-    // FREEZE PLAYER IMMEDIATELY - BEFORE creating cards
-    if (instance_exists(Ocherry)) {
-        Ocherry.hsp = 0;
-        Ocherry.vsp = 0;
-        Ocherry.hasControl = false;
-        Ocherry.STATE = Ocherry.STATE_PAUSE;
-    }
     
     // Create cards
     for (var i = 0; i < num_cards; i++) {

@@ -10,7 +10,7 @@ invincible = false;
 invincible_time = 20;
 invincible_timer = invincible_time;
 // List of all damaging objects
-damage_objects = [Ospinning_blade, Oblade_back, Oblue_fire, Oblue_explode, Oscratch, Otransform, Oslash, Ofireball, OfireExplode, OfireBreath];
+damage_objects = [Ospinning_blade, Oblade_back, Oblue_fire, Oblue_explode, Oscratch, Otransform, Oslash, Ofireball, OfireExplode, OfireBreath, OfireSlash, Otrail];
 // Attack system
 attacking = false;
 attack_cooldown = 0;

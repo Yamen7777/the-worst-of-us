@@ -370,10 +370,10 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                         } else {
                             // FAILED TO DODGE - take damage
 							other.hp -= damage;
-							if (instance_exists(Owerewolf) && !Owerewolf.transform) {
+							if (instance_exists(ObloodPar)) {
 							    ObloodPar.blood += damage;
 							}
-							other.hsp = sign(other.x - x) * 10;
+							other.hsp = sign(other.x - x) * 2;
 
 							other.attacking = false;
 							other.arrow_attacking = false; // ADD THIS
@@ -414,10 +414,10 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     } else {
                         // FAILED TO DODGE - take damage
 						hp -= damager.damage;
-						if (instance_exists(Owerewolf) && !Owerewolf.transform) {
-						    ObloodPar.blood += damager.damage;
-						}
-						hsp = sign(x - damager.x) * 10;
+						if (instance_exists(ObloodPar)) {
+							    ObloodPar.blood += damager.damage;
+							}
+						hsp = sign(x - damager.x) * 2;
 
 						attacking = false;
 						arrow_attacking = false; // ADD THIS

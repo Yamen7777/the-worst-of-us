@@ -72,12 +72,12 @@ sliding_timer = 0;
 sliding_speed = 70; // Initial sliding speed
 sliding_decel = 0.6; // How much speed to lose per frame (deceleration)
 sliding_cooldown = 0; // Cooldown timer
-sliding_cooldown_max = 60; // Cooldown duration (1 second at 60fps)
+sliding_cooldown_max = 30; // Cooldown duration (1 second at 60fps)
 
 //dash 
 dashing = false;
 canDash = false;
-dashDistance = 650;
+dashDistance = 800; //min 400 max 800
 dashTime = 10;
 water_dash = false;
 water_push = false;
@@ -87,7 +87,7 @@ bananaF = noone;
 follow_banana = noone;
 
 dashed = false;
-dashT = 120;
+dashT = 180; //min 60 max 180
 dash_cooldown = dashT;
 
 //attacking
@@ -127,8 +127,26 @@ block_deflect = false;
 block_deflect_started = false;
 block_deflect_duration = 25; // 5 frames at 12fps (5 * 60/12 = 25)
 block_deflect_timer = 0;
+block_blade_created = false; // Track if blade was created this block
 
 // Spell system
+//icons
+icon1 = false;
+icon2 = false;
+icon3 = false;
+iconD = false;
+// Base spell stats (level 0 values)
+base_max_blood = 50; // Starting max blood at level 0
+base_spell_damage_multiplier = 1.0; // Base spell damage
+
+// Current spell stats
+current_max_blood = base_max_blood;
+current_spell_damage_multiplier = base_spell_damage_multiplier;
+
+// Upgrade increments
+max_blood_per_level = 90; // +90 per level (50 -> 140 -> 230 -> 320 -> 410 -> 500)
+spell_damage_boost_per_level = 1.0; // +100% damage per level at levels 4 and 5
+
 spell1_active = false;
 spell1_started = false;
 spell1_duration = 45; // 9 frames at 12fps (9 * 60/12 = 45)
@@ -146,13 +164,16 @@ spell2_cooldown_max = 300; // 5 seconds at 60fps
 spell3_active = false;
 spell3_started = false;
 spell3_duration = 90; // 15 frames at 12fps (18 * 60/12 = 90)
+spell4_duration = 110; // 22 frames at 12fps (22 * 60/12 = 110)
 spell3_timer = 0;
 spell3_cooldown = 0;
 spell3_cooldown_max = 420; // 7 seconds at 60fps
 
 spell_attack_frame1 = 25; // Frame 5 at 12fps (5 * 60/12 = 25)
 spell_attack_frame2 = 10; // Frame 2 at 12fps (2 * 60/12 = 10)
-spell_attack_frame3 = 65; // Frame 13 at 12fps (13 * 60/12 = 65)
+spell_attack_frame3 = 60; // Frame 12 at 12fps (12 * 60/12 = 60)
+spell_attack_frame4 = 70; // Frame 14 at 12fps (14 * 60/12 = 70)
+
 
 spell1_attacked = false;
 spell2_attacked = false;
@@ -197,6 +218,9 @@ available_upgrade_points = 0;
 //fire modes 
 fire_mode = false;
 fire_range = false;
+fire_dash = false;
+fire_spells = false;
+fire_defence = false;
 
 // Upgrade categories (0-5 each)
 upgrade_attack = 0;
@@ -310,15 +334,38 @@ calculate_stats = function() {
     // Attack damage
     current_damage = base_damage + (upgrade_attack * attack_damage_per_level);
     
-    // Speed
-    current_speed = base_speed + (upgrade_speed * speed_boost_per_level);
-    current_run_speed = base_run_speed + (upgrade_speed * run_speed_boost_per_level);
+    // Speed - Scale from min to max based on upgrade level
+    var speed_progress = upgrade_speed / max_upgrade_level;
+    current_speed = lerp(15, 30, speed_progress);
+    current_run_speed = lerp(25, 45, speed_progress);
+    
+    if (upgrade_speed >= 1) {
+        var dash_progress = (upgrade_speed - 1) / (max_upgrade_level - 1);
+        dashDistance = lerp(400, 800, dash_progress);
+        dashT = lerp(180, 60, dash_progress);
+    } else {
+        dashDistance = 0;
+        dashT = 180;
+    }
     
     // Range (multiplicative)
     current_range = base_range + (upgrade_range * range_multiplier_per_level);
     
-    // Defence (damage reduction)
-    current_defence = upgrade_defence * defence_reduction_per_level;
+    // === DEFENCE SYSTEM ===
+    // Defence (damage reduction percentage)
+    // Level 0: 25% reduction (0.75 damage taken)
+    // Level 1: 50% reduction (0.50 damage taken)
+    // Level 2: 75% reduction (0.25 damage taken)
+    // Level 3+: 100% reduction (0.00 damage taken - immune)
+    if (upgrade_defence == 0) {
+        current_defence = 0.25; // 25% reduction
+    } else if (upgrade_defence == 1) {
+        current_defence = 0.50; // 50% reduction
+    } else if (upgrade_defence == 2) {
+        current_defence = 0.75; // 75% reduction
+    } else if (upgrade_defence >= 3) {
+        current_defence = 1.00; // 100% reduction (immune)
+    }
     
     // Spell power (multiplicative)
     current_spell_power = base_spell_power + (upgrade_spell * spell_power_per_level);
@@ -326,6 +373,29 @@ calculate_stats = function() {
     // Spell cooldown reduction (multiplicative, capped at 75% reduction)
     var cooldown_reduction = min(upgrade_spell * spell_cooldown_reduction_per_level, 0.75);
     current_spell_cooldown = base_spell_cooldown - cooldown_reduction;
+    
+    // === ENERGY/SPELL SYSTEM ===
+    // Max blood calculation: 50 at level 0, then +90 per level
+    current_max_blood = base_max_blood + (upgrade_spell * max_blood_per_level);
+    
+    // Spell damage multiplier
+    // Level 0-3: 1x damage
+    // Level 4: 2x damage
+    // Level 5: 3x damage
+    if (upgrade_spell <= 3) {
+        current_spell_damage_multiplier = 1.0;
+    } else if (upgrade_spell == 4) {
+        current_spell_damage_multiplier = 2.0;
+    } else if (upgrade_spell >= 5) {
+        current_spell_damage_multiplier = 3.0;
+    }
+    
+    // Update blood bar max capacity in ObloodPar
+    if (instance_exists(ObloodPar)) {
+        ObloodPar.fullBlood = current_max_blood;
+        // Clamp current blood to new max
+        ObloodPar.blood = clamp(ObloodPar.blood, 0, current_max_blood);
+    }
 }
 
 // Initialize stats
@@ -349,18 +419,65 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
         sliding_cooldown = sliding_cooldown_max;
     }
     
+    // Variable to track if we're blocking successfully
+    var _blocked_successfully = false;
+    var _final_damage = _damage; // Start with full damage (no reduction)
+    
     // --- BLOCKING CHECK ---
     if (blocking && _source_facing != undefined) {
-        // ... rest of blocking code
         // Check if player and source are facing each other (opposite directions)
         var _facing_each_other = (face != _source_facing);
         
         if (_facing_each_other) {
             // Successfully blocked!
+            _blocked_successfully = true;
             block_deflect = true;
             block_deflect_started = true;
             block_deflect_timer = block_deflect_duration;
             blocking = true;
+            
+            // ONLY apply defence reduction when blocking successfully
+            // Level 0: 25% blocked (take 75% damage)
+            // Level 1: 50% blocked (take 50% damage)
+            // Level 2: 75% blocked (take 25% damage)
+            // Level 3+: 100% blocked (take 0% damage)
+            _final_damage = _damage * (1 - current_defence);
+            // Create spinning blade on block (level 4 and 5) - ONLY ONCE PER BLOCK
+            if (!block_blade_created) {
+                if (upgrade_defence == 4) {
+                    // Level 4: Small blade, 2 damage, half distance
+                    var _blade_x = x + (face * 50);
+                    var _blade_y = y - 180;
+					
+					if(fire_defence) var _spinning = Sspinning_fire;
+					else var _spinning = Sspinning_blade;
+					
+                    with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_blade)) {
+						sprite_index = _spinning;
+                        damage = 2;
+                        image_xscale = other.face * 0.5; // Smaller size
+                        image_yscale = 0.5; // Smaller size
+                        max_distance = 400; // Half distance (800 / 2)
+                    }
+                    block_blade_created = true; // Mark as created
+                } else if (upgrade_defence >= 5) {
+                    // Level 5: Medium blade, 4 damage, full distance
+                    var _blade_x = x + (face * 50);
+                    var _blade_y = y - 180;
+					
+					if(fire_defence) var _spinning = Sspinning_fire;
+					else var _spinning = Sspinning_blade;
+					
+                    with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_blade)) {
+						sprite_index = _spinning;
+                        damage = 4;
+                        image_xscale = other.face * 0.75; // Medium size
+                        image_yscale = 0.75; // Medium size
+                        max_distance = 800; // Full distance
+                    }
+                    block_blade_created = true; // Mark as created
+                }
+            }
             
             // Optional: Play block sound
             // audio_play_sound(SNblock, 1, false);
@@ -377,97 +494,105 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
             
             // Small upward bump
             vsp = min(vsp, -2);
-            
-            return; // Don't take damage
         }
-        // If not facing each other (attack from behind), continue to damage below
+        // If not facing each other (attack from behind), take full damage
     }
+    // If NOT blocking at all, take full damage (no reduction)
     
-    // Apply damage
-    hp -= _damage;
+    // Apply the final calculated damage
+    hp -= _final_damage;
     if (hp < 0) hp = 0;
     
-    // Start hitstun / temporary invincibility
-    hitstun_time = 20;
-    
-    // Cancel blocking if hit
-    blocking = false;
-    block_deflect = false;
-    block_deflect_timer = 0;
-    
-    // Cancel all spells if hit
-    spell1_active = false;
-    spell1_timer = 0;
-    spell1_attacked = false;
-    
-    spell2_active = false;
-    spell2_timer = 0;
-    spell2_attacked = false;
-    
-    spell3_active = false;
-    spell3_timer = 0;
-    spell3_attacked = false;
-    
-    //reset hold attack
-    hold_time = 0;
-    
-    // --- Knockback / unstuck ---
-    // Determine knockback direction based on source facing or position
-    var _dir = 1; // Default to right
-    
-    if (_source_facing != undefined) {
-        // Knock away in the direction the source is facing (they push us)
-        _dir = _source_facing;
-    }
-    else if (_source_x != undefined) {
-        // If source provided, knock away from it
-        _dir = sign(x - _source_x);
-        if (_dir == 0) _dir = 1;
-    } 
-    else {
-        // No source provided - check collision sides to determine knockback
-        // Check left side
-        if (place_meeting(x - 1, y, Ospikes) || place_meeting(x - 1, y, Ojack)) {
-            _dir = 1; // Hit from left, push right
+    // Only apply hitstun and knockback if we took damage
+    if (_final_damage > 0) {
+        // Start hitstun / temporary invincibility
+        hitstun_time = 20;
+        
+        // Cancel blocking if hit (only if not blocked successfully)
+        if (!_blocked_successfully) {
+            blocking = false;
+            block_deflect = false;
+            block_deflect_timer = 0;
+            block_blade_created = false; // Reset blade creation flag
         }
-        // Check right side
-        else if (place_meeting(x + 1, y, Ospikes) || place_meeting(x + 1, y, Ojack)) {
-            _dir = -1; // Hit from right, push left
+        
+        // Cancel all spells if hit
+        spell1_active = false;
+        spell1_timer = 0;
+        spell1_attacked = false;
+        
+        spell2_active = false;
+        spell2_timer = 0;
+        spell2_attacked = false;
+        
+        spell3_active = false;
+        spell3_timer = 0;
+        spell3_attacked = false;
+        
+        //reset hold attack
+        hold_time = 0;
+        
+        // --- Knockback / unstuck ---
+        // Determine knockback direction based on source facing or position
+        var _dir = 1; // Default to right
+        
+        if (_source_facing != undefined) {
+            // Knock away in the direction the source is facing (they push us)
+            _dir = _source_facing;
         }
-        // If can't determine, use facing direction opposite
+        else if (_source_x != undefined) {
+            // If source provided, knock away from it
+            _dir = sign(x - _source_x);
+            if (_dir == 0) _dir = 1;
+        } 
         else {
-            _dir = -face;
-        }
-    }
-    
-    var _kb_dist = 8;
-    var _kb_hsp = 8;
-    
-    // Velocity kick (feel) - knock in the direction of the attack
-    hsp = _dir * _kb_hsp;
-    vsp = min(vsp, -2);
-    
-    // Physical shove
-    for (var i = 0; i < _kb_dist; i++)
-    {
-        if (!place_meeting(x + _dir, y, Owall))
-        {
-            x += _dir;
-        }
-        else break;
-    }
-    
-    // If still inside spikes, nudge upward
-    if (place_meeting(x, y, Ospikes))
-    {
-        for (var j = 0; j < 16; j++)
-        {
-            if (!place_meeting(x, y - 1, Owall))
-            {
-                y -= 1;
-                if (!place_meeting(x, y, Ospikes)) break;
+            // No source provided - check collision sides to determine knockback
+            // Check left side
+            if (place_meeting(x - 1, y, Ospikes) || place_meeting(x - 1, y, Ojack)) {
+                _dir = 1; // Hit from left, push right
             }
-            else break;
+            // Check right side
+            else if (place_meeting(x + 1, y, Ospikes) || place_meeting(x + 1, y, Ojack)) {
+                _dir = -1; // Hit from right, push left
+            }
+            // If can't determine, use facing direction opposite
+            else {
+                _dir = -face;
+            }
+        }
+        
+        // Reduce knockback if blocked successfully
+        var _kb_dist = _blocked_successfully ? 4 : 8;
+        var _kb_hsp = _blocked_successfully ? 4 : 8;
+        
+        // Velocity kick (feel) - knock in the direction of the attack
+        hsp = _dir * _kb_hsp;
+        vsp = min(vsp, -2);
+        
+        // Physical shove (skip if we blocked successfully - already did it above)
+        if (!_blocked_successfully) {
+            for (var i = 0; i < _kb_dist; i++)
+            {
+                if (!place_meeting(x + _dir, y, Owall))
+                {
+                    x += _dir;
+                }
+                else break;
+            }
+        }
+        
+        // If still inside spikes, nudge upward
+        if (place_meeting(x, y, Ospikes))
+        {
+            for (var j = 0; j < 16; j++)
+            {
+                if (!place_meeting(x, y - 1, Owall))
+                {
+                    y -= 1;
+                    if (!place_meeting(x, y, Ospikes)) break;
+                }
+                else break;
+            }
         }
     }
 }
@@ -609,9 +734,9 @@ STATE_FREE = function()
 
 	    if (move != 0) face = move;
 
-	    //acceleration and deceleration
-	    if(run) var maxspd = 35; //max speed when the player is running
-	    else maxspd = 25; // Max speed when the player is walking
+	    //acceleration and deceleration - USE CALCULATED SPEEDS
+	    if(run) var maxspd = current_run_speed; // Uses calculated run speed (25-45)
+	    else maxspd = current_speed; // Uses calculated walk speed (15-30)
 	    var accel = 0.2;          // Acceleration factor for smooth transition
 	    var deccel = 0.1;         // Deceleration factor for smooth stop
 
@@ -839,17 +964,18 @@ STATE_FREE = function()
 	
 	//dash
 	D_inputs = right or left or up or down;
-	
+
 	dashing = false;
-	if (dash and canDash and !sliding_ground and instance_exists(ObloodPar) and ObloodPar.blood >= 10) 
+	// Check if dash is unlocked (speed level >= 1) and has enough blood
+	if (dash and canDash and !sliding_ground and upgrade_speed >= 1 and instance_exists(ObloodPar) and ObloodPar.blood >= 10) 
 	{
-		screenShake(25,8);
-		dashing = true;
-		vsp = -2;
-		onground(false);
+	    screenShake(25,8);
+	    dashing = true;
+	    vsp = -2;
+	    onground(false);
 	    canDash = false;
-		audio_sound_pitch(SNdash,random_range(0.8,1));
-		audio_play_sound(SNdash,4,false);
+	    audio_sound_pitch(SNdash,random_range(0.8,1));
+	    audio_play_sound(SNdash,4,false);
 
 	    // If the player is holding a movement key, use the input direction
 	    if (D_inputs) {
@@ -862,8 +988,8 @@ STATE_FREE = function()
 	    dashSPD = dashDistance / dashTime;
 	    dashEnergy = dashDistance;
 	    STATE = STATE_DASH;
-		dashed = true;
-		ObloodPar.blood -= 10;
+	    dashed = true;
+	    ObloodPar.blood -= 10;
 	}
 	
 	//dash cooldown
@@ -900,12 +1026,25 @@ STATE_FREE = function()
 			with instance_create_depth(475,360,301,ObloodPar) sprite_index = SbloodPar3;
 		}
 		
-		//spell 1
-		if(!instance_exists(Ospell_icon))
+		//icons
+		if(upgrade_spell >= 1) and (!icon1)
 		{
+			icon1 = true;
 			with (instance_create_layer(460,400,layer,Ospell_icon)) sprite_index = Sspell1;
+		}
+		if(upgrade_spell >= 2) and (!icon2)
+		{
+			icon2 = true;
 			with (instance_create_layer(560,400,layer,Ospell_icon)) sprite_index = Sspell2;
+		}
+		if(upgrade_spell >= 3) and (!icon3) 
+		{
+			icon3 = true;
 			with (instance_create_layer(660,400,layer,Ospell_icon)) sprite_index = Sspell3;
+		}
+		if(upgrade_speed >= 1) and (!iconD) 
+		{
+			iconD = true;
 			with (instance_create_layer(800,400,layer,Ospell_icon)) sprite_index = Sspell_dash;
 		}
 	}
@@ -916,6 +1055,7 @@ STATE_FREE = function()
 	    hsp = 0; // Stop movement while blocking
 	} else if (!block_deflect) {
 	    blocking = false;
+	    block_blade_created = false; // Reset when not blocking
 	}
 
 	// Block deflect timer
@@ -927,14 +1067,24 @@ STATE_FREE = function()
 	if (block_deflect && block_deflect_timer == 0) {
 	    block_deflect = false;
 	    blocking = false;
+	    block_blade_created = false; // Reset when deflect ends
 	}
 	
-	//fire mode s
+	//fire modes
 	if(upgrade_attack >= 3) fire_mode = true;
 	else fire_mode = false;
 	
 	if(upgrade_range >= 3) fire_range = true;
 	else fire_range = false;
+	
+	if(upgrade_speed >= 3) fire_dash = true;
+	else fire_dash = false;
+	
+	if(upgrade_spell >= 4) fire_spells = true;
+	else fire_spells = false;
+	
+	if(upgrade_defence >= 4) fire_defence = true;
+	else fire_defence = false;
 	
 	//attacking
 	// Decrease timers
@@ -1202,15 +1352,15 @@ STATE_FREE = function()
 	// Update attack flag to include spells
 	attack = (attack1 || attack2 || attack3 || attack_crouch || attack_air || spell1_active || spell2_active || spell3_active || attack_timer > 0);
 
-	// SPELL 1 - Q (Costs 50 blood)
-	if (spell1 && !spell1_active && !spell2_active && !spell3_active && spell1_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground) {
+	// SPELL 1 - Q (Costs 50 blood) - UNLOCKED AT LEVEL 1
+	if (spell1 && !spell1_active && !spell2_active && !spell3_active && spell1_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 1) {
 	    // Check if player has enough blood
 	    if (instance_exists(ObloodPar) && ObloodPar.blood >= 50) {
 	        spell1_active = true;
 	        spell1_started = true;
 	        spell1_timer = spell1_duration;
 	        spell1_attacked = false;
-	        spell1_cooldown = spell1_cooldown_max; // START COOLDOWN IMMEDIATELY
+	        spell1_cooldown = spell1_cooldown_max;
 	        hsp = 0;
         
 	        // Consume blood
@@ -1222,17 +1372,33 @@ STATE_FREE = function()
 	if (spell1_active && spell1_timer > 0) {
 	    // Cast at frame 5 (when timer reaches the attack frame)
 	    if (spell1_timer == spell1_duration - spell_attack_frame1 && !spell1_attacked) {
-	        // Create spell projectile
-	        if(face == 1) var _bladeX = 75;
-	        if(face == -1) var _bladeX = -75;
-	        with(instance_create_layer(x + _bladeX, y - 165, "bullets", Ofireball))
-	        {
-	            image_xscale = other.face;
-	        }
+	        // Check if spell is unlocked (level 1+)
+	        if (upgrade_spell >= 1) {
+	            // Create spell projectile
+	            if(face == 1) var _bladeX = 75;
+	            if(face == -1) var _bladeX = -75;
+	            with(instance_create_layer(x + _bladeX, y - 165, "bullets", Ofireball))
+	            {
+	                image_xscale = other.face;
+	                // Apply spell damage multiplier
+	                damage = damage * other.current_spell_damage_multiplier;
+                
+	                // Apply size scaling based on energy level
+	                if (other.upgrade_spell == 4) {
+	                    // Level 4: 1.5x size
+	                    image_xscale *= 1.5;
+	                    image_yscale = 1.5;
+	                } else if (other.upgrade_spell >= 5) {
+	                    // Level 5: 2x size
+	                    image_xscale *= 2;
+	                    image_yscale = 2;
+	                }
+	            }
         
-	        // Play spell sound
-	        audio_sound_pitch(SNfire,random_range(0.7,0.8));
-	        audio_play_sound(SNfire, 4, false);
+	            // Play spell sound
+	            audio_sound_pitch(SNfire,random_range(0.7,0.8));
+	            audio_play_sound(SNfire, 4, false);
+	        }
         
 	        spell1_attacked = true;
 	    }
@@ -1244,15 +1410,15 @@ STATE_FREE = function()
 	    // Cooldown already started when spell was cast
 	}
 
-	// SPELL 2 - E (Costs 75 blood)
-	if (spell2 && !spell1_active && !spell2_active && !spell3_active && spell2_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground) {
+	// SPELL 2 - E (Costs 75 blood) - UNLOCKED AT LEVEL 2
+	if (spell2 && !spell1_active && !spell2_active && !spell3_active && spell2_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 2) {
 	    // Check if player has enough blood
 	    if (instance_exists(ObloodPar) && ObloodPar.blood >= 75) {
 	        spell2_active = true;
 	        spell2_started = true;
 	        spell2_timer = spell2_duration;
 	        spell2_attacked = false;
-	        spell2_cooldown = spell2_cooldown_max; // START COOLDOWN IMMEDIATELY
+	        spell2_cooldown = spell2_cooldown_max;
 	        hsp = 0;
         
 	        // Consume blood
@@ -1264,14 +1430,32 @@ STATE_FREE = function()
 	if (spell2_active && spell2_timer > 0) {
 	    // Cast at frame 2 (when timer reaches the attack frame)
 	    if (spell2_timer == spell2_duration - spell_attack_frame2 && !spell2_attacked) {
-	        // Create spell projectile
-	        if(face == 1) var _bladeX = 120;
-	        if(face == -1) var _bladeX = -120;
-	        instance_create_layer(x + _bladeX, y - 190, "bullets", OfireBreath);
+	        // Check if spell is unlocked (level 2+)
+	        if (upgrade_spell >= 2) {
+	            // Create spell projectile
+	            if(face == 1) var _bladeX = 120;
+	            if(face == -1) var _bladeX = -120;
+	            with(instance_create_layer(x + _bladeX, y - 190, "bullets", OfireBreath))
+	            {
+	                // Apply spell damage multiplier
+	                damage = damage * other.current_spell_damage_multiplier;
+                
+	                // Apply size scaling based on energy level
+	                if (other.upgrade_spell == 4) {
+	                    // Level 4: 1.5x size
+	                    image_xscale *= 1.5;
+	                    image_yscale = 1.5;
+	                } else if (other.upgrade_spell >= 5) {
+	                    // Level 5: 2x size
+	                    image_xscale *= 2;
+	                    image_yscale = 2;
+	                }
+	            }
         
-	        // Play spell sound
-	        audio_sound_pitch(SNfire,random_range(0.7,0.8));
-	        audio_play_sound(SNfire, 4, false);
+	            // Play spell sound
+	            audio_sound_pitch(SNfire,random_range(0.7,0.8));
+	            audio_play_sound(SNfire, 4, false);
+	        }
         
 	        spell2_attacked = true;
 	    }
@@ -1283,37 +1467,96 @@ STATE_FREE = function()
 	    // Cooldown already started when spell was cast
 	}
 
-	// SPELL 3 - R (Costs 100 blood)
-	if (spell3 && !spell1_active && !spell2_active && !spell3_active && spell3_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground) {
+	// SPELL 3 - R (Costs 100 blood) - UNLOCKED AT LEVEL 3
+	if (spell3 && !spell1_active && !spell2_active && !spell3_active && spell3_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 3) {
 	    // Check if player has enough blood
 	    if (instance_exists(ObloodPar) && ObloodPar.blood >= 100) {
 	        spell3_active = true;
 	        spell3_started = true;
-	        spell3_timer = spell3_duration;
+	        if(fire_spells) spell3_timer = spell4_duration;
+			else spell3_timer = spell3_duration;
 	        spell3_attacked = false;
-	        spell3_cooldown = spell3_cooldown_max; // START COOLDOWN IMMEDIATELY
+	        spell3_cooldown = spell3_cooldown_max;
 	        hsp = 0;
         
 	        // Consume blood
 	        ObloodPar.blood -= 100;
 	    }
 	}
-
-	// SPELL 3 ACTIVE - Cast projectile at specific frame
-	if (spell3_active && spell3_timer > 0) {
-	    // Cast at frame 10 (when timer reaches the attack frame)
-	    if (spell3_timer == spell3_duration - spell_attack_frame3 && !spell3_attacked) {
-	        // Create spell projectile
-	        if(face == 1) var _bladeX = 75;
-	        if(face == -1) var _bladeX = -75;
-	        instance_create_layer(x + _bladeX, y - 175, "bullets", Ofireball);
+	
+	if(fire_spells)
+	{
+		// SPELL 3 ACTIVE - Cast projectile at specific frame
+		if (spell3_active && spell3_timer > 0) {
+		    // Cast at frame 10 (when timer reaches the attack frame)
+		    if (spell3_timer == spell4_duration - spell_attack_frame4 && !spell3_attacked) {
+		        // Check if spell is unlocked (level 3+)
+		        if (upgrade_spell >= 3) {
+		            // Create spell projectile
+		            if(face == 1) var _bladeX = 75;
+		            if(face == -1) var _bladeX = -75;
+		            with(instance_create_layer(x + _bladeX, y - 175, "bullets", OfireSlash))
+		            {
+		                // Apply spell damage multiplier
+		                damage = damage * other.current_spell_damage_multiplier;
+                
+		                // Apply size scaling based on energy level
+		                if (other.upgrade_spell == 4) {
+		                    // Level 4: 1.5x size
+		                    image_xscale *= 1.5;
+		                    image_yscale = 1.5;
+		                } else if (other.upgrade_spell >= 5) {
+		                    // Level 5: 2x size
+		                    image_xscale *= 2;
+		                    image_yscale = 2;
+		                }
+		            }
         
-	        // Play spell sound
-	        audio_sound_pitch(SNfire,random_range(0.7,0.8));
-	        audio_play_sound(SNfire, 4, false);
+		            // Play spell sound
+		            audio_sound_pitch(SNfire,random_range(0.7,0.8));
+		            audio_play_sound(SNfire, 4, false);
+		        }
         
-	        spell3_attacked = true;
-	    }
+		        spell3_attacked = true;
+		    }
+		}
+	}
+	else
+	{
+		// SPELL 3 ACTIVE - Cast projectile at specific frame
+		if (spell3_active && spell3_timer > 0) {
+		    // Cast at frame 10 (when timer reaches the attack frame)
+		    if (spell3_timer == spell3_duration - spell_attack_frame3 && !spell3_attacked) {
+		        // Check if spell is unlocked (level 3+)
+		        if (upgrade_spell >= 3) {
+		            // Create spell projectile
+		            if(face == 1) var _bladeX = 75;
+		            if(face == -1) var _bladeX = -75;
+		            with(instance_create_layer(x + _bladeX, y - 175, "bullets", OfireSlash))
+		            {
+		                // Apply spell damage multiplier
+		                damage = damage * other.current_spell_damage_multiplier;
+                
+		                // Apply size scaling based on energy level
+		                if (other.upgrade_spell == 4) {
+		                    // Level 4: 1.5x size
+		                    image_xscale *= 1.5;
+		                    image_yscale = 1.5;
+		                } else if (other.upgrade_spell >= 5) {
+		                    // Level 5: 2x size
+		                    image_xscale *= 2;
+		                    image_yscale = 2;
+		                }
+		            }
+        
+		            // Play spell sound
+		            audio_sound_pitch(SNfire,random_range(0.7,0.8));
+		            audio_play_sound(SNfire, 4, false);
+		        }
+        
+		        spell3_attacked = true;
+		    }
+		}
 	}
 
 	// SPELL 3 FINISHED
@@ -1588,10 +1831,13 @@ STATE_DASH = function()
 			var _x = random_range(Ocherry.x-50,Ocherry.x+50);
 			var _y = random_range(Ocherry.y,Ocherry.y-300);
 			
+			if(fire_dash) var _colors = c_orange;
+			else var _colors = c_aqua;
+	
 			//sparks
 			with (instance_create_depth(_x,_y, depth+1, Odust))
 		    {
-		        image_blend = c_orange;
+		        image_blend = _colors;
 		        image_alpha = 0.6;
 		    }
 			
@@ -1599,7 +1845,7 @@ STATE_DASH = function()
 		    {
 		        sprite_index = other.sprite_index;
 		        image_xscale = other.face;
-		        image_blend = c_orange;
+		        image_blend = _colors;
 		        image_alpha = 0.6;
         
 		        fade_speed = 0.08; // Faster fade

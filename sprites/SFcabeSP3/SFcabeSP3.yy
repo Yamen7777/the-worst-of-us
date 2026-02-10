@@ -2,7 +2,7 @@
   "$GMSprite":"v2",
   "%Name":"SFcabeSP3",
   "bboxMode":2,
-  "bbox_bottom":357,
+  "bbox_bottom":356,
   "bbox_left":162,
   "bbox_right":279,
   "bbox_top":97,

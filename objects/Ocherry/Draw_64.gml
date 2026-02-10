@@ -19,3 +19,7 @@ if (instance_exists(Ocherry)) {
 
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
+
+draw_set_font(FLM);
+draw_set_colour(c_red);
+draw_text(700,1000,string(hp));

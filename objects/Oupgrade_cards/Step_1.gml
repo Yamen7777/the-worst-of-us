@@ -1,5 +1,3 @@
-// BEGIN STEP EVENT - COMPLETE
-
 // Animation handling
 if (card_state == "selected") {
     animation_timer++;

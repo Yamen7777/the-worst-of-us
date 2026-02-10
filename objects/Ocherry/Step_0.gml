@@ -192,7 +192,8 @@ else if (hitstun_time > 0)
 }
 //spell 1
 else if (spell1_active) {
-    sprite_index = ScabeSP1;
+    if(fire_spells) sprite_index = SFcabeSP1;
+    else sprite_index = ScabeSP1;
     if (spell1_started) {
         image_index = 0;
         spell1_started = false;
@@ -200,7 +201,8 @@ else if (spell1_active) {
 }
 //spell 2
 else if (spell2_active) {
-    sprite_index = ScabeSP2;
+    if(fire_spells) sprite_index = SFcabeSP2;
+    else sprite_index = ScabeSP2;
     if (spell2_started) {
         image_index = 0;
         spell2_started = false;
@@ -208,7 +210,8 @@ else if (spell2_active) {
 }
 //spell 3
 else if (spell3_active) {
-    sprite_index = ScabeSP3;
+    if(fire_spells) sprite_index = SFcabeSP3;
+    else sprite_index = ScabeSP3;
     if (spell3_started) {
         image_index = 0;
         spell3_started = false;
@@ -216,7 +219,8 @@ else if (spell3_active) {
 }
 //block deflect (successful block animation)
 else if (block_deflect) {
-    sprite_index = ScabeBD;
+    if(fire_defence) sprite_index = SFcabeBD;
+    else sprite_index = ScabeBD;
     if (block_deflect_started) {
         image_index = 0;
         block_deflect_started = false;
@@ -224,7 +228,8 @@ else if (block_deflect) {
 }
 //blocking idle
 else if (blocking) {
-    sprite_index = ScabeB;
+    if(fire_defence) sprite_index = SFcabeB;
+    else sprite_index = ScabeB;
 }
 //sliding - MOVED BEFORE CROUCHING
 else if (sliding_ground) {
@@ -297,8 +302,8 @@ else if (attack3) {
 }
 //crouch attack 
 else if (attack_crouch) {
-    if(fire_mode) sprite_index = ScabeCA;
-    else sprite_index = SFcabeCA;
+    if(fire_mode) sprite_index = SFcabeCA;
+    else sprite_index = ScabeCA;
     if (attack_crouch_started) {
         image_index = 0;
         attack_crouch_started = false;
@@ -309,7 +314,8 @@ else if (crouching) sprite_index = ScabeC;
 //dashing
 else if(STATE = STATE_DASH)
 {
-    sprite_index = ScabeDS;
+    if(fire_dash) sprite_index = SFcabeDS;
+    else sprite_index = ScabeDS;
 }
 //running
 else if (abs(hsp) > 0) and (run)
