@@ -44,11 +44,13 @@ if (card_state == "selected") {
     
 	    // RE-ENABLE PLAYER CONTROLS AND MOVEMENT
 	    if (instance_exists(Ocherry)) {
+	        Ocherry.hasControl = true;
+	        Ocherry.Cpause = false;
 	        Ocherry.STATE = Ocherry.STATE_FREE;
 	    }
     
 	    instance_destroy();
-}
+	}
 }
 else if (card_state == "disappearing") {
     image_alpha = lerp(image_alpha, 0, 0.2);

@@ -150,7 +150,6 @@ if instance_exists(_topWall)
 //state
 STATE();
 
-if(keyboard_check_pressed(vk_tab)) fire_mode = !fire_mode;
 
 if(sprite_index = ScabeD) and (!dead)
 {
@@ -237,7 +236,8 @@ else if (sliding_ground) {
 }
 //air attack
 else if (attack_air) {
-    sprite_index = ScabeJA;
+    if(fire_mode) sprite_index = SFcabeJA;
+    else sprite_index = ScabeJA;
     if (attack_air_started) {
         image_index = 0;
         attack_air_started = false;
@@ -262,13 +262,16 @@ else if (!ground)
         }
     }
 }
-//hold attack
-else if (hold_attack) {
-    sprite_index = ScabeAT1;
+//charging hold attack (NOT released yet)
+else if (hold_time > 5 && !hold_attack) {
+    if(fire_mode) sprite_index = SFcabeAT2;
+    else sprite_index = ScabeAT2;
+    image_index = 0; // Hold on first frame while charging
 }
-//attack 1
+//attack 1 (includes released hold attack)
 else if (attack1) {
-    sprite_index = ScabeAT1;
+    if(fire_mode) sprite_index = SFcabeAT1;
+    else sprite_index = ScabeAT1;
     if (attack1_started) {
         image_index = 0;
         attack1_started = false;
@@ -276,7 +279,8 @@ else if (attack1) {
 }
 //attack 2
 else if (attack2) {
-    sprite_index = ScabeAT2;
+    if(fire_mode) sprite_index = SFcabeAT2;
+    else sprite_index = ScabeAT2;
     if (attack2_started) {
         image_index = 0;
         attack2_started = false;
@@ -284,7 +288,8 @@ else if (attack2) {
 }
 //attack 3
 else if (attack3) {
-    sprite_index = ScabeAT3;
+    if(fire_mode) sprite_index = SFcabeAT3;
+    else sprite_index = ScabeAT3;
     if (attack3_started) {
         image_index = 0;
         attack3_started = false;
@@ -292,7 +297,8 @@ else if (attack3) {
 }
 //crouch attack 
 else if (attack_crouch) {
-    sprite_index = ScabeCA;
+    if(fire_mode) sprite_index = ScabeCA;
+    else sprite_index = SFcabeCA;
     if (attack_crouch_started) {
         image_index = 0;
         attack_crouch_started = false;

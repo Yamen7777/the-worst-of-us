@@ -353,7 +353,6 @@ showing_upgrade_cards = false;
 upgrade_cards_created = false;
 upgrade_cards_animating = false;
 
-// Function to show upgrade cards when player levels up
 show_upgrade_cards = function() {
     if (!instance_exists(Ocherry)) return;
     
@@ -402,6 +401,14 @@ show_upgrade_cards = function() {
     var total_width = (num_cards - 1) * card_spacing;
     var start_x = screen_center_x - (total_width / 2);
     
+    // FREEZE PLAYER IMMEDIATELY - BEFORE creating cards
+    if (instance_exists(Ocherry)) {
+        Ocherry.hsp = 0;
+        Ocherry.vsp = 0;
+        Ocherry.hasControl = false;
+        Ocherry.STATE = Ocherry.STATE_PAUSE;
+    }
+    
     // Create cards
     for (var i = 0; i < num_cards; i++) {
         var card = instance_create_layer(start_x + (i * card_spacing), screen_center_y, "Instances", Oupgrade_cards);
@@ -430,11 +437,6 @@ show_upgrade_cards = function() {
     
     showing_upgrade_cards = true;
     upgrade_cards_created = true;
-    
-    // FREEZE PLAYER COMPLETELY - disable controls AND freeze movement
-    if (instance_exists(Ocherry)) {
-        Ocherry.STATE = Ocherry.STATE_PAUSE;
-    }
 }
 
 // Function to hide all upgrade cards (only used for cleanup, not during animation)

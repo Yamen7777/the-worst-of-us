@@ -13,8 +13,6 @@ trail_timer = 0;
 hp = 100;
 hitstun_time = 0; // frames of stun / invincibility after taking damage
 
-fire_mode = false;
-
 //moving
 face = 1;
 run = 0;
@@ -120,11 +118,8 @@ combo_window_start = 5; // Combo window opens after 5 frames
 //hold attack
 hold_attack = false;
 hold_time = 0;
-hold_blade = 20; // Frames to charge one blade
-max_blades = 9; // Maximum blades that can be charged
-blade_release = 0;
-blade_release_timer = 0;
-blade_release_delay = 5; // Frames between each blade release
+hold_max = 50; 
+
 
 // Blocking system
 blocking = false;
@@ -198,6 +193,10 @@ max_pitch = 2;          // Maximum pitch when dash_collect reaches 50
 player_level = 0;
 max_level = 25;
 available_upgrade_points = 0;
+
+//fire modes 
+fire_mode = false;
+fire_range = false;
 
 // Upgrade categories (0-5 each)
 upgrade_attack = 0;
@@ -842,7 +841,7 @@ STATE_FREE = function()
 	D_inputs = right or left or up or down;
 	
 	dashing = false;
-	if (dash and canDash and !sliding_ground and ObloodPar.blood >= 10) 
+	if (dash and canDash and !sliding_ground and instance_exists(ObloodPar) and ObloodPar.blood >= 10) 
 	{
 		screenShake(25,8);
 		dashing = true;
@@ -930,6 +929,13 @@ STATE_FREE = function()
 	    blocking = false;
 	}
 	
+	//fire mode s
+	if(upgrade_attack >= 3) fire_mode = true;
+	else fire_mode = false;
+	
+	if(upgrade_range >= 3) fire_range = true;
+	else fire_range = false;
+	
 	//attacking
 	// Decrease timers
 	if (attack_timer > 0) {
@@ -957,17 +963,18 @@ STATE_FREE = function()
 	        attack_timer = attack_crouch_duration;
         
 	        // Create crouch attack slash
-	        if(face ==  1) var _bladeX =  60;
-	        if(face == -1) var _bladeX = -60;
-			
-	        if(!fire_mode) var _sprite = Sslash1;
-	        if( fire_mode) var _sprite = SslashFire1;
-	        with(instance_create_layer(Ocherry.x+_bladeX, Ocherry.y-80, "bullets", Oslash)) 
-	        {
-	            sprite_index = _sprite;
-	            image_xscale = other.face;
-	            image_yscale = -1;
-	        }
+			if(face ==  1) var _bladeX =  60;
+			if(face == -1) var _bladeX = -60;
+
+			if(!fire_mode) var _sprite = Sslash1;
+			if( fire_mode) var _sprite = SslashFire1;
+			with(instance_create_layer(Ocherry.x+_bladeX, Ocherry.y-80, "bullets", Oslash)) 
+			{
+			    damage = 5 + (other.upgrade_attack * other.attack_damage_per_level); // Base 5 + upgrades
+			    sprite_index = _sprite;
+			    image_xscale = other.face;
+			    image_yscale = -1;
+			}
         
 	        // Play crouch attack sound
 	        audio_sound_pitch(SNsword, random_range(1, 1.2));
@@ -982,16 +989,17 @@ STATE_FREE = function()
 	        attack_timer = attack_air_duration;
         
 	        // Create air attack slash
-	        if(face ==  1) var _bladeX =  100;
-	        if(face == -1) var _bladeX = -100;
-			
+			if(face ==  1) var _bladeX =  100;
+			if(face == -1) var _bladeX = -100;
+
 			if(!fire_mode) var _sprite = Sslash1;
-	        if( fire_mode) var _sprite = SslashFire1;
-	        with(instance_create_layer(Ocherry.x+_bladeX, Ocherry.y-140, "bullets", Oslash)) 
-	        {
-	            sprite_index = _sprite; // You can change this to a specific air slash sprite if you have one
-	            image_xscale = other.face;
-	        }
+			if( fire_mode) var _sprite = SslashFire1;
+			with(instance_create_layer(Ocherry.x+_bladeX, Ocherry.y-140, "bullets", Oslash)) 
+			{
+			    damage = 5 + (other.upgrade_attack * other.attack_damage_per_level); // Base 5 + upgrades
+			    sprite_index = _sprite;
+			    image_xscale = other.face;
+			}
         
 	        // Play air attack sound
 	        audio_sound_pitch(SNsword, random_range(1, 1.2));
@@ -999,57 +1007,53 @@ STATE_FREE = function()
 	    }
 	}
 	// IDLE - Can start attack 1
-	else if (!attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && attack_timer == 0 && cooldown_timer == 0) {
+	else if (!attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && attack_timer == 0 && cooldown_timer == 0 && !sliding_ground) {
     
-	    // Releasing blades after charge
-	    if (blade_release > 0) {
-	        blade_release_timer++;
-        
-	        if (blade_release_timer >= blade_release_delay) {
-	            // Release one blade
-	            instance_create_layer(Ocherry.x + 75, Ocherry.y - 175, "bullets", Ospinning_blade);
-	            blade_release--;
-	            blade_release_timer = 0; // Reset timer for next blade
-	        }
-	    }
-	    // Charging up
-	    else if (HLMB) and (ground) {
+	    // Charging up (single powerful attack)
+	    if (HLMB) and (ground) and (!hold_attack) {
 	        hsp = 0;
 	        hold_time++;
         
-	        //hold the sprite
-	        image_index = 0;
-	        // Cap at max blades
-	        if (hold_time >= hold_blade * max_blades) {
-	            hold_time = hold_blade * max_blades; // Stop increasing at 9 blades worth
-	        }
+	        // DON'T lock image_index here - let it animate naturally
         
-	        if (hold_time >= hold_blade) {
+	        // Charge time for one powerful attack
+	        if (hold_time >= 40) { // Longer charge time (was 20)
+	            hold_time = 40; // Cap at charge time
 	            hold_attack = true;
 	        }
 	    }
-	    // Released the button - calculate how many blades to release
-	    else if (hold_time > 0) {
-	        hsp = 0;
-	        if (hold_attack) {
-	            blade_release = min(floor(hold_time / hold_blade), max_blades); // Cap at max_blades
-	            if(face ==  1) var _bladeX =  60;
-	            if(face == -1) var _bladeX = -60;
-				
-				if(!fire_mode) var _sprite = Sslash1;
-			    if( fire_mode) var _sprite = SslashFire1;
-	            with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
-	            {
-	                sprite_index = _sprite;
-	                image_xscale = other.face;
-	            }
-	            // Play attack 4 sound
-	            audio_sound_pitch(SNsword,random_range(1,1));
-	            audio_play_sound(SNsword, 1, false);
-	        }
-	        hold_time = 0;
-	    }
-	    if(image_index == 3) hold_attack = false;
+	    // Released the button - release powerful attack if charged
+		else if (hold_time > 0) {
+		    hsp = 0;
+		    if (hold_attack) {
+		        // Start the attack animation properly
+		        attack2 = true;
+		        attack2_started = true;
+		        attack_timer = attack2_duration;
+        
+		        if(face ==  1) var _bladeX =  130;
+		        if(face == -1) var _bladeX = -130;
+        
+		        // Create large slash
+		        if(!fire_mode) var _sprite = Sslash2;
+		        if( fire_mode) var _sprite = SslashFire2;
+		        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
+		        {
+		            damage = (5 + (other.upgrade_attack * other.attack_damage_per_level)) * 1.5; // bigger damage
+		            sprite_index = _sprite;
+		            image_xscale = other.face * 1.5; // 1.5x size
+		            image_yscale = 1.5; // 1.5x size
+		            image_angle += 125*other.face;
+		        }
+        
+		        // Play attack sound
+		        audio_sound_pitch(SNsword,random_range(0.8, 0.9)); // Lower pitch for powerful attack
+		        audio_play_sound(SNsword, 1, false);
+		    }
+		    hold_time = 0;
+		    hold_attack = false;
+		}
+    
 	    //normal attack
 	    if (LMB) {
 	        attack1 = true;
@@ -1061,11 +1065,12 @@ STATE_FREE = function()
 	        //create attack 1 slash
 	        if(face ==  1) var _bladeX =  150;
 	        if(face == -1) var _bladeX = -150;
-			
-			if(!fire_mode) var _sprite = Sslash1;
+        
+	        if(!fire_mode) var _sprite = Sslash1;
 	        if( fire_mode) var _sprite = SslashFire1;
 	        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-180,"bullets",Oslash)) 
 	        {
+	            damage = 5 + (other.upgrade_attack * other.attack_damage_per_level);
 	            sprite_index = _sprite;
 	            image_xscale = other.face;
 	        }
@@ -1110,17 +1115,18 @@ STATE_FREE = function()
 	        combo_window_timer = combo_window_start;
 	        queued_attack2 = false;
 	        //create attack 2 slash
-	        if(face ==  1) var _bladeX =  130;
-	        if(face == -1) var _bladeX = -130;
-			
+			if(face ==  1) var _bladeX =  130;
+			if(face == -1) var _bladeX = -130;
+
 			if(!fire_mode) var _sprite = Sslash2;
-	        if( fire_mode) var _sprite = SslashFire2;
-	        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
-	        {
-	            sprite_index = _sprite;
-	            image_xscale = other.face;
-				image_angle += 125*other.face;
-	        }
+			if( fire_mode) var _sprite = SslashFire2;
+			with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
+			{
+			    damage = 5 + (other.upgrade_attack * other.attack_damage_per_level); // Base 5 + upgrades
+			    sprite_index = _sprite;
+			    image_xscale = other.face;
+			    image_angle += 125*other.face;
+			}
 	        // Play attack 2 sound
 	        audio_sound_pitch(SNsword,random_range(1,1.2));
 	        audio_play_sound(SNsword, 1, false);
@@ -1152,16 +1158,17 @@ STATE_FREE = function()
 	        attack_timer = attack3_duration;
 	        queued_attack3 = false;
 	        //create attack 3 slash
-	        if(face ==  1) var _bladeX =  170;
-	        if(face == -1) var _bladeX = -170;
-			
+			if(face ==  1) var _bladeX =  170;
+			if(face == -1) var _bladeX = -170;
+
 			if(!fire_mode) var _sprite = Sslash3;
-	        if( fire_mode) var _sprite = SslashFire3;
-	        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
-	        {
-	            sprite_index = _sprite;
-	            image_xscale = other.face;
-	        }
+			if( fire_mode) var _sprite = SslashFire3;
+			with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
+			{
+			    damage = 5 + (other.upgrade_attack * other.attack_damage_per_level); // Base 5 + upgrades
+			    sprite_index = _sprite;
+			    image_xscale = other.face;
+			}
 	        // Play attack 3 sound
 	        audio_sound_pitch(SNsword,random_range(1,1.2));
 	        audio_play_sound(SNsword, 1, false);
@@ -1853,10 +1860,15 @@ STATE_DASH = function()
 
 STATE_PAUSE = function()
 {
-	Cpause = true;
-	hsp = 0;
-	vsp = 0; 
-	grv = 0;
+    Cpause = true;
+    hasControl = false;
+    hsp = 0;
+    vsp = 0; 
+    grv = 0;
+    
+    // Force zero movement every frame
+    x = x;
+    y = y;
 }
 
 STATE_FUSE = function()

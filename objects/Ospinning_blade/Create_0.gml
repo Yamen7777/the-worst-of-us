@@ -9,6 +9,7 @@ direction = base_direction + angle_tilt;
 // Starting position
 start_x = x;
 start_y = y;
-max_distance = 1750;
 
-damage = 7.5;
+// These will be set by the creator (Ocherry)
+max_distance = 2000; // Default max
+damage = 2; // Default damage

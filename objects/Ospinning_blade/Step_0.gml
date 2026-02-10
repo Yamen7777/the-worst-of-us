@@ -12,5 +12,6 @@ if (place_meeting(x, y, Owall)) {
     instance_destroy();
 }
 
-if(!Ocherry.fire_mode) sprite_index = Sspinning_blade;
-if( Ocherry.fire_mode) sprite_index = Sspinning_fire;
+//fire mode
+if(Ocherry.fire_range) sprite_index = Sspinning_fire;
+else sprite_index = Sspinning_blade;
