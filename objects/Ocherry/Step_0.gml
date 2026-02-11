@@ -150,7 +150,6 @@ if instance_exists(_topWall)
 //state
 STATE();
 
-
 if(sprite_index = ScabeD) and (!dead)
 {
 	dead = true;
@@ -185,7 +184,21 @@ else if(STATE = STATE_DEAD)
 {
     sprite_index = ScabeD;
 }
-//hitstun
+//block deflect (successful block animation) - MOVED BEFORE HITSTUN
+else if (block_deflect) {
+    if(fire_defence) sprite_index = SFcabeBD;
+    else sprite_index = ScabeBD;
+    if (block_deflect_started) {
+        image_index = 0;
+        block_deflect_started = false;
+    }
+}
+//blocking idle - MOVED BEFORE HITSTUN
+else if (blocking) {
+    if(fire_defence) sprite_index = SFcabeB;
+    else sprite_index = ScabeB;
+}
+//hitstun (only show if NOT blocking)
 else if (hitstun_time > 0)
 {
     sprite_index = ScabeHT;
@@ -216,20 +229,6 @@ else if (spell3_active) {
         image_index = 0;
         spell3_started = false;
     }
-}
-//block deflect (successful block animation)
-else if (block_deflect) {
-    if(fire_defence) sprite_index = SFcabeBD;
-    else sprite_index = ScabeBD;
-    if (block_deflect_started) {
-        image_index = 0;
-        block_deflect_started = false;
-    }
-}
-//blocking idle
-else if (blocking) {
-    if(fire_defence) sprite_index = SFcabeB;
-    else sprite_index = ScabeB;
 }
 //sliding - MOVED BEFORE CROUCHING
 else if (sliding_ground) {

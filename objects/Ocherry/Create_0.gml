@@ -1,4 +1,4 @@
-/// @description player veriables
+/// @description player veriables | cherry create
 //input setop
 input_setup();
 
@@ -322,7 +322,17 @@ upgrade_stat = function(_stat_type) {
     
     if (upgraded) {
         available_upgrade_points--;
+        
+        // Add to upgrade history
+        array_push(global.upgrade_history, _stat_type);
+        
         calculate_stats(); // Recalculate all stats
+        
+        // Save progress after upgrading
+        if (instance_exists(Ogame)) {
+            global.save_progress();
+        }
+        
         return true;
     }
     
@@ -412,6 +422,9 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
     // If we are currently in hitstun, ignore further damage
     if (hitstun_time > 0) or (dashing) return;
     
+    // Make sure damage is a valid number
+    if (is_undefined(_damage)) _damage = 0;
+    
     // Cancel sliding if hit
     if (sliding_ground) {
         sliding_ground = false;
@@ -421,7 +434,7 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
     
     // Variable to track if we're blocking successfully
     var _blocked_successfully = false;
-    var _final_damage = _damage; // Start with full damage (no reduction)
+    var _final_damage = _damage; // Start with full damage
     
     // --- BLOCKING CHECK ---
     if (blocking && _source_facing != undefined) {
@@ -436,55 +449,47 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
             block_deflect_timer = block_deflect_duration;
             blocking = true;
             
-            // ONLY apply defence reduction when blocking successfully
-            // Level 0: 25% blocked (take 75% damage)
-            // Level 1: 50% blocked (take 50% damage)
-            // Level 2: 75% blocked (take 25% damage)
-            // Level 3+: 100% blocked (take 0% damage)
+            // Apply defence reduction when blocking
             _final_damage = _damage * (1 - current_defence);
+            
             // Create spinning blade on block (level 4 and 5) - ONLY ONCE PER BLOCK
             if (!block_blade_created) {
                 if (upgrade_defence == 4) {
-                    // Level 4: Small blade, 2 damage, half distance
                     var _blade_x = x + (face * 50);
                     var _blade_y = y - 180;
-					
-					if(fire_defence) var _spinning = Sspinning_fire;
-					else var _spinning = Sspinning_blade;
-					
+                    
+                    if(fire_defence) var _spinning = Sspinning_fire;
+                    else var _spinning = Sspinning_blade;
+                    
                     with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_blade)) {
-						sprite_index = _spinning;
+                        sprite_index = _spinning;
                         damage = 2;
-                        image_xscale = other.face * 0.5; // Smaller size
-                        image_yscale = 0.5; // Smaller size
-                        max_distance = 400; // Half distance (800 / 2)
+                        image_xscale = other.face * 0.5;
+                        image_yscale = 0.5;
+                        max_distance = 400;
                     }
-                    block_blade_created = true; // Mark as created
+                    block_blade_created = true;
                 } else if (upgrade_defence >= 5) {
-                    // Level 5: Medium blade, 4 damage, full distance
                     var _blade_x = x + (face * 50);
                     var _blade_y = y - 180;
-					
-					if(fire_defence) var _spinning = Sspinning_fire;
-					else var _spinning = Sspinning_blade;
-					
+                    
+                    if(fire_defence) var _spinning = Sspinning_fire;
+                    else var _spinning = Sspinning_blade;
+                    
                     with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_blade)) {
-						sprite_index = _spinning;
+                        sprite_index = _spinning;
                         damage = 4;
-                        image_xscale = other.face * 0.75; // Medium size
-                        image_yscale = 0.75; // Medium size
-                        max_distance = 800; // Full distance
+                        image_xscale = other.face * 0.75;
+                        image_yscale = 0.75;
+                        max_distance = 800;
                     }
-                    block_blade_created = true; // Mark as created
+                    block_blade_created = true;
                 }
             }
             
-            // Optional: Play block sound
-            // audio_play_sound(SNblock, 1, false);
-            
-            // Knockback when blocking (push player back)
-            var _kb_dist = 4; // Smaller knockback when blocking
-            var _dir = -face; // Push back opposite to facing direction
+            // Knockback when blocking
+            var _kb_dist = 4;
+            var _dir = -face;
             
             for (var i = 0; i < _kb_dist; i++) {
                 if (!place_meeting(x + _dir, y, Owall)) {
@@ -492,12 +497,9 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
                 } else break;
             }
             
-            // Small upward bump
             vsp = min(vsp, -2);
         }
-        // If not facing each other (attack from behind), take full damage
     }
-    // If NOT blocking at all, take full damage (no reduction)
     
     // Apply the final calculated damage
     hp -= _final_damage;
@@ -505,18 +507,16 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
     
     // Only apply hitstun and knockback if we took damage
     if (_final_damage > 0) {
-        // Start hitstun / temporary invincibility
         hitstun_time = 20;
         
-        // Cancel blocking if hit (only if not blocked successfully)
         if (!_blocked_successfully) {
             blocking = false;
             block_deflect = false;
             block_deflect_timer = 0;
-            block_blade_created = false; // Reset blade creation flag
+            block_blade_created = false;
         }
         
-        // Cancel all spells if hit
+        // Cancel all spells
         spell1_active = false;
         spell1_timer = 0;
         spell1_attacked = false;
@@ -529,47 +529,36 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
         spell3_timer = 0;
         spell3_attacked = false;
         
-        //reset hold attack
         hold_time = 0;
         
-        // --- Knockback / unstuck ---
-        // Determine knockback direction based on source facing or position
-        var _dir = 1; // Default to right
+        // Knockback
+        var _dir = 1;
         
         if (_source_facing != undefined) {
-            // Knock away in the direction the source is facing (they push us)
             _dir = _source_facing;
         }
         else if (_source_x != undefined) {
-            // If source provided, knock away from it
             _dir = sign(x - _source_x);
             if (_dir == 0) _dir = 1;
         } 
         else {
-            // No source provided - check collision sides to determine knockback
-            // Check left side
             if (place_meeting(x - 1, y, Ospikes) || place_meeting(x - 1, y, Ojack)) {
-                _dir = 1; // Hit from left, push right
+                _dir = 1;
             }
-            // Check right side
             else if (place_meeting(x + 1, y, Ospikes) || place_meeting(x + 1, y, Ojack)) {
-                _dir = -1; // Hit from right, push left
+                _dir = -1;
             }
-            // If can't determine, use facing direction opposite
             else {
                 _dir = -face;
             }
         }
         
-        // Reduce knockback if blocked successfully
         var _kb_dist = _blocked_successfully ? 4 : 8;
         var _kb_hsp = _blocked_successfully ? 4 : 8;
         
-        // Velocity kick (feel) - knock in the direction of the attack
         hsp = _dir * _kb_hsp;
         vsp = min(vsp, -2);
         
-        // Physical shove (skip if we blocked successfully - already did it above)
         if (!_blocked_successfully) {
             for (var i = 0; i < _kb_dist; i++)
             {
@@ -581,7 +570,6 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
             }
         }
         
-        // If still inside spikes, nudge upward
         if (place_meeting(x, y, Ospikes))
         {
             for (var j = 0; j < 16; j++)
@@ -1008,22 +996,38 @@ STATE_FREE = function()
 	
 	if(room != Ressance)
 	{
-		//health Par
-		if(!instance_exists(OhealthPar))
-		{
-			instance_create_layer(500,200,layer,OhealthPar);
-		}
-		if(hp <= 0)
-		{
-			STATE = STATE_DEAD;
-		}
-	
-		//blade par
+	    //health Par
+	    if(!instance_exists(OhealthPar))
+	    {
+	        instance_create_layer(500,200,layer,OhealthPar);
+	    }
+	    if(hp <= 0)
+	    {
+	        STATE = STATE_DEAD;
+	    }
+
+	    //blade par
 		if(!instance_exists(ObloodPar))
 		{
-			with instance_create_depth(475,360,301,ObloodPar) sprite_index = SbloodPar1;
-			with instance_create_depth(507,355,301,ObloodPar) sprite_index = SbloodPar2;
-			with instance_create_depth(475,360,301,ObloodPar) sprite_index = SbloodPar3;
+		    // Create all three parts with proper initialization
+		    var bg = instance_create_depth(475,360,301,Oblood);
+		    bg.sprite_index = SbloodPar1;
+    
+		    var bar = instance_create_depth(507,355,301,ObloodPar);
+		    bar.sprite_index = SbloodPar2;
+		    bar.fullBlood = current_max_blood; // Set from player stats
+    
+		    // Apply loaded blood if it exists
+		    if (variable_global_exists("loaded_blood") && !is_undefined(global.loaded_blood)) {
+		        bar.blood = global.loaded_blood;
+		        show_debug_message("STATE_FREE: Applied loaded blood: " + string(bar.blood));
+		        // DON'T clear the variable here - let alarm[1] handle it
+		    } else {
+		        bar.blood = 0; // Start with 0 blood
+		    }
+    
+		    var overlay = instance_create_depth(475,360,301,Oblood);
+		    overlay.sprite_index = SbloodPar3;
 		}
 		
 		//icons
@@ -2132,13 +2136,6 @@ STATE_DEAD = function() {
     vsp = 0;
     grv = 0;
     
-    // Deduct flowers from current attempt
-    global.flower -= global.flowers_collected_this_room;
-    
-    // Clear temporary collection (makes flowers collectible again)
-    ds_list_clear(global.temp_flowers);
-    global.flowers_collected_this_room = 0;
-    
     //screen shake
     screenShake(20,6);
     
@@ -2146,9 +2143,27 @@ STATE_DEAD = function() {
     if (image_index >= 10) and (sprite_index == ScabeD) and (!death_transition_done) {
         death_transition_done = true;
         
+        // UNDO LAST UPGRADE (go back one level)
+        global.undo_last_upgrade();
+        
+        // Reset HP to full
+        hp = 100;
+        
+        // Reset blood to 0
+        if (instance_exists(ObloodPar)) {
+            ObloodPar.blood = 0;
+        }
+        
         // Reset kill counter to room start value
         if (instance_exists(Ogame)) {
             global.kill_counter = Ogame.room_start_kill_count;
+        }
+        
+        // === CRITICAL FIX: SAVE PROGRESS NOW (with reset stats) ===
+        // This ensures the save file has HP=100 and Blood=0, not the death values
+        if (instance_exists(Ogame)) {
+            global.save_progress();
+            show_debug_message("SAVED AFTER DEATH: HP=" + string(hp) + " Blood=0 Level=" + string(player_level));
         }
         
         TRANS(TRANS_MODE.AGAIN,"strawberry");
@@ -2162,13 +2177,6 @@ STATE_DEAD = function() {
             x = xstart;
             y = ystart;
         }
-        
-        // Reset temporary progress
-        if (!global.has_checkpoint) {
-            global.flower -= global.flowers_collected_this_room;
-        }
-        ds_list_clear(global.temp_flowers);
-        global.flowers_collected_this_room = 0;
     }
 }
 

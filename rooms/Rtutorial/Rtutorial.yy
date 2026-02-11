@@ -18,7 +18,6 @@
     {"name":"inst_6B6349D3","path":"rooms/Rtutorial/Rtutorial.yy",},
     {"name":"inst_7D7F95A2","path":"rooms/Rtutorial/Rtutorial.yy",},
     {"name":"inst_39478018","path":"rooms/Rtutorial/Rtutorial.yy",},
-    {"name":"inst_35EFC6C1","path":"rooms/Rtutorial/Rtutorial.yy",},
     {"name":"inst_9B818D9","path":"rooms/Rtutorial/Rtutorial.yy",},
     {"name":"inst_528D70E6","path":"rooms/Rtutorial/Rtutorial.yy",},
     {"name":"inst_16AB1172","path":"rooms/Rtutorial/Rtutorial.yy",},
@@ -108,7 +107,6 @@
         {"$GMRInstance":"v4","%Name":"inst_6639499B_3_1_2_2","colour":4294967295,"frozen":false,"hasCreationCode":false,"ignore":false,"imageIndex":0,"imageSpeed":1.0,"inheritCode":false,"inheritedItemId":null,"inheritItemSettings":false,"isDnd":false,"name":"inst_6639499B_3_1_2_2","objectId":{"name":"Ocamera","path":"objects/Ocamera/Ocamera.yy",},"properties":[],"resourceType":"GMRInstance","resourceVersion":"2.0","rotation":0.0,"scaleX":1.0,"scaleY":1.0,"x":640.0,"y":576.0,},
       ],"layers":[],"name":"player","properties":[],"resourceType":"GMRInstanceLayer","resourceVersion":"2.0","userdefinedDepth":false,"visible":true,},
     {"$GMRInstanceLayer":"","%Name":"enemy","depth":500,"effectEnabled":true,"effectType":null,"gridX":32,"gridY":32,"hierarchyFrozen":false,"inheritLayerDepth":false,"inheritLayerSettings":false,"inheritSubLayers":true,"inheritVisibility":true,"instances":[
-        {"$GMRInstance":"v4","%Name":"inst_35EFC6C1","colour":4294967295,"frozen":false,"hasCreationCode":false,"ignore":false,"imageIndex":0,"imageSpeed":1.0,"inheritCode":false,"inheritedItemId":null,"inheritItemSettings":false,"isDnd":false,"name":"inst_35EFC6C1","objectId":{"name":"Odummy","path":"objects/Odummy/Odummy.yy",},"properties":[],"resourceType":"GMRInstance","resourceVersion":"2.0","rotation":0.0,"scaleX":1.0,"scaleY":1.0,"x":10880.0,"y":3072.0,},
         {"$GMRInstance":"v4","%Name":"inst_528D70E6","colour":4294967295,"frozen":false,"hasCreationCode":true,"ignore":false,"imageIndex":0,"imageSpeed":1.0,"inheritCode":false,"inheritedItemId":null,"inheritItemSettings":false,"isDnd":false,"name":"inst_528D70E6","objectId":{"name":"OLevelEND","path":"objects/OLevelEND/OLevelEND.yy",},"properties":[],"resourceType":"GMRInstance","resourceVersion":"2.0","rotation":0.0,"scaleX":6.0,"scaleY":19.5,"x":14464.0,"y":2592.0,},
         {"$GMRInstance":"v4","%Name":"inst_16AB1172","colour":4294967295,"frozen":false,"hasCreationCode":false,"ignore":false,"imageIndex":0,"imageSpeed":1.0,"inheritCode":false,"inheritedItemId":null,"inheritItemSettings":false,"isDnd":false,"name":"inst_16AB1172","objectId":{"name":"OAskeleton","path":"objects/OAskeleton/OAskeleton.yy",},"properties":[
             {"$GMOverriddenProperty":"v1","%Name":"","name":"","objectId":{"name":"Ojack","path":"objects/Ojack/Ojack.yy",},"propertyId":{"name":"hp","path":"objects/Ojack/Ojack.yy",},"resourceType":"GMOverriddenProperty","resourceVersion":"2.0","value":"100",},

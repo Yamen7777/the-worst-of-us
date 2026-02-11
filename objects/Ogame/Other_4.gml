@@ -1,14 +1,4 @@
 window_set_fullscreen(true)
-// Set tile based on room name and number (C2L8 or higher)
-tile = 0;
-
-
-if(room == Rmain_menu) or (room == Rchapters)
-{
-	global.chapter = noone;
-}
-
-
 
 if(instance_exists(OmainMenu)) OmainMenu.not_board = false;
 
@@ -48,3 +38,9 @@ draw_set_valign(fa_top);
 
 //key
 global.key = false;
+
+//create the player
+if(!instance_exists(Ocherry)) and (room != Rmain_menu)
+{
+	instance_create_layer(global.spawn_x,global.spawn_y,"player",Ocherry);
+}

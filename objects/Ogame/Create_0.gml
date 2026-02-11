@@ -1,352 +1,320 @@
-// Replace the single SAVEFILE macro with multiple save files
-#macro SAVEFILE_CHAPTER1 "chapter1.sav"
-#macro SAVEFILE_CHAPTER2 "chapter2.sav" 
-#macro SAVEFILE_MAIN "main.sav"
+//Ogame create
 
-global.chapter = noone;
+//SAVEFILE
+#macro SAVEFILE_MAIN "player_progress.sav"
 
-// Keep all your existing global variables...
-global.flower = 0;
-global.collected_flowers = ds_map_create();
-global.temp_flowers = ds_list_create();
-global.flowers_collected_this_room = 0;
-
-//save icon
-// Track visited rooms (this persists until "reset all progress")
-global.visited_rooms = ds_list_create();
-
-// Main save flower tracking (persists until "New Save")
-global.main_collected_flowers = ds_map_create();
-global.main_flower_count = 0;
-
-global.room_flower_counts = ds_map_create(); // Track main flower count per room
-global.room_flower_snapshots = ds_map_create(); // Track collected flower snapshot per room
-
-global.spawn_x = 1408;
-global.spawn_y = 1248;
+// Spawn position
+global.spawn_x = 832;
+global.spawn_y = 3008;
 global.has_checkpoint = false;
 
-// Add chapter-specific flower counts
-global.flower_chapter1 = 0;
-global.flower_chapter2 = 0;
-global.collected_flowers_chapter1 = ds_map_create();
-global.collected_flowers_chapter2 = ds_map_create();
+// Upgrade history - tracks the order of upgrades chosen
+global.upgrade_history = []; // Array of upgrade types in order chosen
 
-// Chapter unlock progress
-open_chapter2 = false;
-open_chapter3 = false;
+// Visited rooms tracking
+global.visited_rooms = ds_list_create();
 
-
-global.get_current_chapter_savefile = function() {
-    if (global.chapter1) return SAVEFILE_CHAPTER1;
-    if (global.chapter2) return SAVEFILE_CHAPTER2;
-    return SAVEFILE_CHAPTER1; // Default fallback
-}
-
-global.save_chapter_progress = function() {
-    var savefile = global.get_current_chapter_savefile();
-    
-    if (file_exists(savefile)) file_delete(savefile);
-    var file = file_text_open_write(savefile);
-    file_text_write_real(file, global.flower);
-    file_text_write_real(file, room);
-    file_text_write_real(file, global.spawn_x);
-    file_text_write_real(file, global.spawn_y);
-    file_text_write_string(file, json_encode(global.collected_flowers));
-    file_text_close(file);
-}
-
-global.load_chapter_progress = function() {
-    var savefile = global.get_current_chapter_savefile();
-    
-    if (!file_exists(savefile)) return false;
-    
-    var file = file_text_open_read(savefile);
-    global.flower = file_text_read_real(file);
-    var target_room = file_text_read_real(file);
-    global.spawn_x = file_text_read_real(file);
-    global.spawn_y = file_text_read_real(file);
-    
-    var flower_data = file_text_read_string(file);
-    if (flower_data != "" && flower_data != "undefined") {
-        ds_map_clear(global.collected_flowers);
-        var json_map = json_decode(flower_data);
-        var keys = ds_map_keys_to_array(json_map);
-        for (var i = 0; i < array_length(keys); i++) {
-            var key = keys[i];
-            ds_map_add(global.collected_flowers, key, true);
-        }
-        ds_map_destroy(json_map);
+// Save player progress (called at the START of each room)
+global.save_progress = function() {
+    if (!instance_exists(Ocherry)) {
+        show_debug_message("ERROR: Cannot save - Ocherry doesn't exist");
+        return false;
     }
+    
+    // Find the blood bar instance (sprite_index == SbloodPar2)
+    var blood_par = noone;
+    with (ObloodPar) {
+        if (sprite_index == SbloodPar2) {
+            blood_par = id;
+            break;
+        }
+    }
+    
+    if (!instance_exists(blood_par)) {
+        show_debug_message("WARNING: Trying to save but blood bar doesn't exist yet");
+        return false;
+    }
+    
+    // Extra safety check - make sure blood is a valid number
+    if (is_undefined(blood_par.blood)) {
+        show_debug_message("ERROR: Blood bar exists but blood value is undefined!");
+        blood_par.blood = 0; // Set to 0 as fallback
+    }
+    
+    if (file_exists(SAVEFILE_MAIN)) file_delete(SAVEFILE_MAIN);
+    var file = file_text_open_write(SAVEFILE_MAIN);
+    
+    // Save current room
+    file_text_write_real(file, room);
+    file_text_writeln(file);
+    
+    // Save spawn position
+    file_text_write_real(file, global.spawn_x);
+    file_text_writeln(file);
+    file_text_write_real(file, global.spawn_y);
+    file_text_writeln(file);
+    
+    // Save player stats
+    file_text_write_real(file, Ocherry.hp);
+    file_text_writeln(file);
+    
+    // Save blood (with extra safety)
+    var blood_value = is_undefined(blood_par.blood) ? 0 : blood_par.blood;
+    file_text_write_real(file, blood_value);
+    file_text_writeln(file);
+    
+    // Save level
+    file_text_write_real(file, Ocherry.player_level);
+    file_text_writeln(file);
+    
+    // Save individual upgrade levels
+    file_text_write_real(file, Ocherry.upgrade_attack);
+    file_text_writeln(file);
+    file_text_write_real(file, Ocherry.upgrade_speed);
+    file_text_writeln(file);
+    file_text_write_real(file, Ocherry.upgrade_range);
+    file_text_writeln(file);
+    file_text_write_real(file, Ocherry.upgrade_defence);
+    file_text_writeln(file);
+    file_text_write_real(file, Ocherry.upgrade_spell);
+    file_text_writeln(file);
+    
+    // Save upgrade history
+    file_text_write_string(file, json_stringify(global.upgrade_history));
+    file_text_writeln(file);
+    
+    // Save kill counter
+    file_text_write_real(file, global.kill_counter);
+    file_text_writeln(file);
+    
+    // Save visited rooms list
+    var visited_count = ds_list_size(global.visited_rooms);
+    file_text_write_real(file, visited_count);
+    file_text_writeln(file);
+    for (var i = 0; i < visited_count; i++) {
+        file_text_write_real(file, ds_list_find_value(global.visited_rooms, i));
+        file_text_writeln(file);
+    }
+    
     file_text_close(file);
     
-    global.has_checkpoint = (global.spawn_x != -1);
+    show_debug_message("SAVED: Room=" + string(room) + " HP=" + string(Ocherry.hp) + " Blood=" + string(blood_value) + " Level=" + string(Ocherry.player_level));
+    
+    return true;
+}
+
+// Add room to visited list (used by save icon)
+global.add_room_to_visited = function(room_id) {
+    if (!global.is_room_visited(room_id)) {
+        ds_list_add(global.visited_rooms, room_id);
+        // Save progress when adding a new room
+        global.save_progress();
+    }
+}
+
+// Load player progress
+global.load_progress = function() {
+    if (!file_exists(SAVEFILE_MAIN)) {
+        show_debug_message("No save file found");
+        return false;
+    }
+    
+    show_debug_message("Loading save file...");
+    
+    var file = file_text_open_read(SAVEFILE_MAIN);
+    
+    // Load target room
+    var target_room = file_text_read_real(file);
+    file_text_readln(file);
+    show_debug_message("Loading room: " + string(target_room));
+    
+    // Load spawn position
+    global.spawn_x = file_text_read_real(file);
+    file_text_readln(file);
+    global.spawn_y = file_text_read_real(file);
+    file_text_readln(file);
+    global.has_checkpoint = true;
+    
+    // Store stats to apply after player is created
+    global.loaded_hp = file_text_read_real(file);
+    file_text_readln(file);
+    global.loaded_blood = file_text_read_real(file);
+    file_text_readln(file);
+    
+    show_debug_message("Loaded HP: " + string(global.loaded_hp) + " Blood: " + string(global.loaded_blood));
+    
+    global.loaded_level = file_text_read_real(file);
+    file_text_readln(file);
+    
+    global.loaded_upgrade_attack = file_text_read_real(file);
+    file_text_readln(file);
+    global.loaded_upgrade_speed = file_text_read_real(file);
+    file_text_readln(file);
+    global.loaded_upgrade_range = file_text_read_real(file);
+    file_text_readln(file);
+    global.loaded_upgrade_defence = file_text_read_real(file);
+    file_text_readln(file);
+    global.loaded_upgrade_spell = file_text_read_real(file);
+    file_text_readln(file);
+    
+    // Load upgrade history
+    var history_json = file_text_read_string(file);
+    file_text_readln(file);
+    if (history_json != "" && history_json != "undefined") {
+        global.upgrade_history = json_parse(history_json);
+    } else {
+        global.upgrade_history = [];
+    }
+    
+    global.loaded_kill_counter = file_text_read_real(file);
+    file_text_readln(file);
+    
+    // Load visited rooms
+    ds_list_clear(global.visited_rooms);
+    var visited_count = file_text_read_real(file);
+    file_text_readln(file);
+    for (var i = 0; i < visited_count; i++) {
+        var room_id = file_text_read_real(file);
+        file_text_readln(file);
+        ds_list_add(global.visited_rooms, room_id);
+    }
+    
+    file_text_close(file);
+    
+    show_debug_message("Load complete! Target room: " + string(target_room));
+    
     return target_room;
 }
 
-global.save_main_progress = function() {
-    if (file_exists(SAVEFILE_MAIN)) file_delete(SAVEFILE_MAIN);
-    var file = file_text_open_write(SAVEFILE_MAIN);
-    file_text_write_real(file, open_chapter2 ? 1 : 0);
-    file_text_write_real(file, open_chapter3 ? 1 : 0);
+// Apply loaded stats to player (call this in player's Room Start)
+global.apply_loaded_stats = function() {
+    if (!instance_exists(Ocherry)) return;
     
-    // Save the main flower data
-    file_text_write_string(file, json_encode(global.main_collected_flowers));
-    file_text_close(file);
-}
-
-global.load_main_progress = function() {
-    if (!file_exists(SAVEFILE_MAIN)) return false;
-    
-    var file = file_text_open_read(SAVEFILE_MAIN);
-    open_chapter2 = file_text_read_real(file) == 1;
-    open_chapter3 = file_text_read_real(file) == 1;
-    
-    // Load main flower data
-    var flower_data = file_text_read_string(file);
-    if (flower_data != "" && flower_data != "undefined") {
-        ds_map_clear(global.main_collected_flowers);
-        var json_map = json_decode(flower_data);
-        var keys = ds_map_keys_to_array(json_map);
-        for (var i = 0; i < array_length(keys); i++) {
-            var key = keys[i];
-            ds_map_add(global.main_collected_flowers, key, ds_map_find_value(json_map, key));
+    if (variable_global_exists("loaded_hp")) {
+        Ocherry.hp = global.loaded_hp;
+        Ocherry.player_level = global.loaded_level;
+        Ocherry.upgrade_attack = global.loaded_upgrade_attack;
+        Ocherry.upgrade_speed = global.loaded_upgrade_speed;
+        Ocherry.upgrade_range = global.loaded_upgrade_range;
+        Ocherry.upgrade_defence = global.loaded_upgrade_defence;
+        Ocherry.upgrade_spell = global.loaded_upgrade_spell;
+        
+        // Recalculate stats based on loaded upgrades
+        Ocherry.calculate_stats();
+        
+        if (instance_exists(ObloodPar)) {
+            ObloodPar.blood = global.loaded_blood;
         }
-        ds_map_destroy(json_map);
+        
+        global.kill_counter = global.loaded_kill_counter;
+        
+        // Clear loaded variables
+        variable_global_set("loaded_hp", undefined);
     }
-    file_text_close(file);
-    return true;
 }
 
-global.reset_chapter_progress = function() {
-    var savefile = global.get_current_chapter_savefile();
-    if (file_exists(savefile)) file_delete(savefile);
-    
-    // Reset current chapter variables
-    global.flower = 0;
-    ds_map_clear(global.collected_flowers);
-    global.spawn_x = -1;
-    global.spawn_y = -1;
-    global.has_checkpoint = false;
-    
-    // Update room snapshots to reflect the reset state (empty flowers)
-    var key = ds_map_find_first(global.main_collected_flowers);
-    while (!is_undefined(key)) {
-        // If this is a room snapshot key, update it to empty
-        if (string_pos("_flowers_snapshot", key) > 0) {
-            ds_map_set(global.main_collected_flowers, key, "");
-        }
-        key = ds_map_find_next(global.main_collected_flowers, key);
-    }
-    
-    // Save the updated main progress
-    global.save_main_progress();
-}
-
+// Reset all progress (for new game)
 global.reset_all_progress = function() {
-    // Delete all save files
-    if (file_exists(SAVEFILE_CHAPTER1)) file_delete(SAVEFILE_CHAPTER1);
-    if (file_exists(SAVEFILE_CHAPTER2)) file_delete(SAVEFILE_CHAPTER2);
+    // Delete save file
     if (file_exists(SAVEFILE_MAIN)) file_delete(SAVEFILE_MAIN);
-    if (file_exists("visited_rooms.sav")) file_delete("visited_rooms.sav");
-    if (file_exists("main_flowers.sav")) file_delete("main_flowers.sav"); // Add this
     
-    // Reset all global variables to starting state
-    global.flower = 0;
-    ds_map_clear(global.collected_flowers);
-    global.spawn_x = -1;
-    global.spawn_y = -1;
+    // Reset spawn to default starting position
+    global.spawn_x = 832;  // Your tutorial room spawn X
+    global.spawn_y = 3008; // Your tutorial room spawn Y
     global.has_checkpoint = false;
     
-    // Reset chapter unlock status
-    open_chapter2 = false;
-    open_chapter3 = false;
+    // Reset upgrade history
+    global.upgrade_history = [];
     
-    // Clear temporary data
-    ds_list_clear(global.temp_flowers);
-    global.flowers_collected_this_room = 0;
+    // Reset kill counter
+    global.kill_counter = 0;
     
-    // Clear visited rooms and main flowers
-    ds_list_clear(global.visited_rooms);
-    ds_map_clear(global.main_collected_flowers); // Add this
-    global.main_flower_count = 0; // Add this
-}
-
-global.load_visited_rooms = function() {
-    var visited_file = "visited_rooms.sav";
-    if (!file_exists(visited_file)) return false;
-    
-    var file = file_text_open_read(visited_file);
-    var count = file_text_read_real(file);
+    // Clear visited rooms
     ds_list_clear(global.visited_rooms);
     
-    for (var i = 0; i < count; i++) {
-        var room_id = file_text_read_real(file);
-        ds_list_add(global.visited_rooms, room_id);
-    }
-    file_text_close(file);
-    return true;
+    show_debug_message("RESET PROGRESS: Spawn set to " + string(global.spawn_x) + ", " + string(global.spawn_y));
 }
 
-global.save_visited_rooms = function() {
-    var visited_file = "visited_rooms.sav";
-    if (file_exists(visited_file)) file_delete(visited_file);
+// Function to undo last upgrade (called on death)
+global.undo_last_upgrade = function() {
+    if (!instance_exists(Ocherry)) return;
+    if (array_length(global.upgrade_history) == 0) return;
     
-    var file = file_text_open_write(visited_file);
-    // Write the count first
-    file_text_write_real(file, ds_list_size(global.visited_rooms));
-    // Write each room ID
-    for (var i = 0; i < ds_list_size(global.visited_rooms); i++) {
-        file_text_write_real(file, ds_list_find_value(global.visited_rooms, i));
+    // Get the last upgrade type
+    var last_upgrade = global.upgrade_history[array_length(global.upgrade_history) - 1];
+    
+    // Remove it from history
+    array_pop(global.upgrade_history);
+    
+    // Decrease the corresponding upgrade level
+    switch(last_upgrade) {
+        case "attack":
+            Ocherry.upgrade_attack = max(0, Ocherry.upgrade_attack - 1);
+            break;
+        case "speed":
+            Ocherry.upgrade_speed = max(0, Ocherry.upgrade_speed - 1);
+            break;
+        case "range":
+            Ocherry.upgrade_range = max(0, Ocherry.upgrade_range - 1);
+            break;
+        case "defence":
+            Ocherry.upgrade_defence = max(0, Ocherry.upgrade_defence - 1);
+            break;
+        case "spell":
+            Ocherry.upgrade_spell = max(0, Ocherry.upgrade_spell - 1);
+            break;
     }
-    file_text_close(file);
+    
+    // Decrease level
+    Ocherry.player_level = max(0, Ocherry.player_level - 1);
+    
+    // Recalculate stats
+    Ocherry.calculate_stats();
+    
+    // Save the updated progress
+    global.save_progress();
 }
 
+// Check if room was visited
 global.is_room_visited = function(room_id) {
     return ds_list_find_index(global.visited_rooms, room_id) >= 0;
 }
 
-global.add_room_to_visited = function(room_id) {
-    if (!global.is_room_visited(room_id)) {
-        ds_list_add(global.visited_rooms, room_id);
-        global.save_visited_rooms();
-    }
-}
-
+// Mark room as visited
 global.mark_room_visited = function(room_id) {
     if (!global.is_room_visited(room_id)) {
         ds_list_add(global.visited_rooms, room_id);
-        global.save_visited_rooms();
         return true; // First time visiting
     }
     return false; // Already visited
 }
 
-global.save_main_flowers = function() {
-    var main_flower_file = "main_flowers.sav";
-    if (file_exists(main_flower_file)) file_delete(main_flower_file);
-    
-    var file = file_text_open_write(main_flower_file);
-    file_text_write_real(file, global.main_flower_count);
-    
-    // Save collected flower IDs
-    var flower_keys = ds_map_keys_to_array(global.main_collected_flowers);
-    file_text_write_real(file, array_length(flower_keys));
-    for (var i = 0; i < array_length(flower_keys); i++) {
-        file_text_write_string(file, flower_keys[i]);
+// Add room to visited list (used by save icon)
+global.add_room_to_visited = function(room_id) {
+    if (!global.is_room_visited(room_id)) {
+        ds_list_add(global.visited_rooms, room_id);
+        // Save progress when adding a new room
+        global.save_progress();
     }
-    file_text_close(file);
 }
-
-global.load_main_flowers = function() {
-    var main_flower_file = "main_flowers.sav";
-    if (!file_exists(main_flower_file)) return false;
-    
-    var file = file_text_open_read(main_flower_file);
-    global.main_flower_count = file_text_read_real(file);
-    
-    var flower_count = file_text_read_real(file);
-    ds_map_clear(global.main_collected_flowers);
-    for (var i = 0; i < flower_count; i++) {
-        var flower_id = file_text_read_string(file);
-        ds_map_add(global.main_collected_flowers, flower_id, true);
-    }
-    file_text_close(file);
-    return true;
-}
-
-// Load main flowers on game start
-global.load_main_flowers();
-
-// Load visited rooms on game start
-global.load_visited_rooms();
-
-// Load main progress on game start
-global.load_main_progress();
 
 //destroy wanted objects
 to_destroy = noone;
 
-//intro
-intro = false;
-
-start_running = false;
-
 //kill counter
 global.kill_counter = 0;
 
-hitstop_timer = 0;           // Countdown timer for freeze
-normal_room_speed = 60;      // Store normal room speed
-hitstop_kill_pitch = 1.0;    // Pitch for SNkill sound
-hitstop_score_pitch = 1.0;   // Pitch for SNscore sound
+hitstop_timer = 0;
+normal_room_speed = 60;
+hitstop_kill_pitch = 1.0;
+hitstop_score_pitch = 1.0;
 
-// (Keep your existing variables too)
 kill_counter_scale = 1;
 kill_counter_target_scale = 1;
 kill_counter_rotation = 0;
 kill_counter_target_rotation = 0;
 kill_counter_jump_power = 0;
 room_start_kill_count = 0;
-
-//key
-global.key = false;
-
-// Initialize blade spot tracking ONCE at game start
-global.blade_spots = ds_list_create();
-show_debug_message("=== BLADE SPOT SYSTEM INITIALIZED ===");
-
-//essance room
-essance_room = false;
-essance_objects_created = false;
-fragment1 = false;
-fragment2 = false;
-slot1 = 0;
-slot2 = 0;
-fuse_option = false;
-fuse = false;
-global.fling = false;
-global.burst = false;
-global.grasp = false;
-global.slot1 = 0;
-global.slot2 = 0;
-global.fuse = false;
-global.fusing = false;
-
-//fusing scene
-fusing_step = 0;
-fusing_timer = 0;
-fusion_center_x = 0;
-fusion_center_y = 0;
-essance_moving = false;
-fragments_moving = ds_list_create();
-fusion_fragment = noone;
-
-//tutorial room
-tutorial = false;
-fragment_explain = true;
-
-// Tutorial action latch flags
-tutorial_action_detected = false;
-
-// tutorial globals
-global.dummy_dialogue_finished = false;
-global.extra_dummies = false;
-create_dummies = false;
-
-
-tutorial = false;
-tutorial_step = 0;
-tutorial_done = false;
-
-tutorial_step_complete = false;
-tutorial_hold_timer = 0;
-
-tutorial_dj_complete = false;
-tutorial_air_complete = false;
-tutorial_finish_timer = 0;
-
-current_character = "";
-
 
 // Upgrade card system
 showing_upgrade_cards = false;
@@ -356,7 +324,7 @@ upgrade_cards_animating = false;
 show_upgrade_cards = function() {
     if (!instance_exists(Ocherry)) return;
     
-    // FREEZE PLAYER FIRST - BEFORE ANYTHING ELSE
+    // FREEZE PLAYER FIRST
     Ocherry.hsp = 0;
     Ocherry.vsp = 0;
     Ocherry.hasControl = false;
@@ -382,12 +350,10 @@ show_upgrade_cards = function() {
         array_push(available_upgrades, "spell");
     }
     
-    // Determine how many cards to show (max 3, but only show what's available)
     var num_cards = min(3, array_length(available_upgrades));
+    if (num_cards == 0) return;
     
-    if (num_cards == 0) return; // No upgrades available
-    
-    // Shuffle available upgrades
+    // Shuffle
     var shuffled = available_upgrades;
     for (var i = array_length(shuffled) - 1; i > 0; i--) {
         var j = irandom(i);
@@ -396,25 +362,20 @@ show_upgrade_cards = function() {
         shuffled[j] = temp;
     }
     
-    // Create the upgrade cards in GUI space
+    // Create cards
     var gui_width = 3733;
     var gui_height = 2240;
-    
     var screen_center_x = gui_width / 2;
     var screen_center_y = gui_height / 2;
-    
-    // Spacing between cards
     var card_spacing = 750;
     var total_width = (num_cards - 1) * card_spacing;
     var start_x = screen_center_x - (total_width / 2);
     
-    // Create cards
     for (var i = 0; i < num_cards; i++) {
         var card = instance_create_layer(start_x + (i * card_spacing), screen_center_y, "Instances", Oupgrade_cards);
         card.upgrade_type = shuffled[i];
         card.depth = -9999;
         
-        // Set sprite based on upgrade type
         switch(shuffled[i]) {
             case "attack":
                 card.sprite_index = Supgrade_damage;
@@ -438,7 +399,6 @@ show_upgrade_cards = function() {
     upgrade_cards_created = true;
 }
 
-// Function to hide all upgrade cards (only used for cleanup, not during animation)
 hide_upgrade_cards = function() {
     with (Oupgrade_cards) {
         instance_destroy();
@@ -448,9 +408,7 @@ hide_upgrade_cards = function() {
     upgrade_cards_created = false;
     upgrade_cards_animating = false;
     
-    // RE-ENABLE CONTROLS AND MOVEMENT
     if (instance_exists(Ocherry)) {
         Ocherry.STATE = Ocherry.STATE_FREE;
     }
 }
-

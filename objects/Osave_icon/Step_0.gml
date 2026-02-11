@@ -14,10 +14,8 @@ switch(state) {
             scale = 1.2;
             rotation = -20;
             state = "scale_settle";
-			// Add current room to visited list
-		    global.add_room_to_visited(room);
-		    // Save the main progress (this will save the flower snapshot we just updated)
-		    global.save_main_progress();
+            // Add current room to visited list and save progress
+            global.add_room_to_visited(room);
         }
         break;
         
@@ -57,4 +55,3 @@ switch(state) {
         }
         break;
 }
-

@@ -1,13 +1,22 @@
-// Get max blood from player
-var _maxBlood = 500; // Default
-if (instance_exists(Ocherry)) {
-    _maxBlood = Ocherry.current_max_blood;
+/// ObloodPar Step Event
+// Safety check - ensure fullBlood is always valid
+if (is_undefined(fullBlood) || fullBlood <= 0) {
+    if (instance_exists(Ocherry)) {
+        fullBlood = Ocherry.current_max_blood;
+    } else {
+        fullBlood = 50; // Fallback
+    }
 }
 
-fullBlood = _maxBlood;
+// Safety check - ensure blood is valid
+if (is_undefined(blood)) {
+    blood = 0;
+}
+
+// Clamp blood to valid range
 blood = clamp(blood, 0, fullBlood);
 
-if(sprite_index == SbloodPar2)
-{
-    image_xscale = blood/fullBlood;
+// Visual update
+if (sprite_index == SbloodPar2) {
+    image_xscale = blood / fullBlood;
 }
