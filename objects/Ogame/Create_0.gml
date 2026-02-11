@@ -16,29 +16,19 @@ global.visited_rooms = ds_list_create();
 
 // Save player progress (called at the START of each room)
 global.save_progress = function() {
-    if (!instance_exists(Ocherry)) {
-        show_debug_message("ERROR: Cannot save - Ocherry doesn't exist");
-        return false;
-    }
+    if (!instance_exists(Ocherry)) return false;
     
-    // Find the blood bar instance (sprite_index == SbloodPar2)
-    var blood_par = noone;
-    with (ObloodPar) {
-        if (sprite_index == SbloodPar2) {
-            blood_par = id;
-            break;
-        }
-    }
-    
+    // Find the first ObloodPar instance
+    var blood_par = instance_find(ObloodPar, 0);
     if (!instance_exists(blood_par)) {
-        show_debug_message("WARNING: Trying to save but blood bar doesn't exist yet");
+        show_debug_message("WARNING: Trying to save but ObloodPar doesn't exist yet");
         return false;
     }
     
-    // Extra safety check - make sure blood is a valid number
-    if (is_undefined(blood_par.blood)) {
-        show_debug_message("ERROR: Blood bar exists but blood value is undefined!");
-        blood_par.blood = 0; // Set to 0 as fallback
+    // CRITICAL: Safety check for blood value
+    if (is_undefined(blood_par.blood) || !is_real(blood_par.blood)) {
+        show_debug_message("ERROR: Blood is undefined! Resetting to 0");
+        blood_par.blood = 0;
     }
     
     if (file_exists(SAVEFILE_MAIN)) file_delete(SAVEFILE_MAIN);
@@ -57,30 +47,61 @@ global.save_progress = function() {
     // Save player stats
     file_text_write_real(file, Ocherry.hp);
     file_text_writeln(file);
-    
-    // Save blood (with extra safety)
-    var blood_value = is_undefined(blood_par.blood) ? 0 : blood_par.blood;
-    file_text_write_real(file, blood_value);
+    file_text_write_real(file, blood_par.blood); // Now guaranteed to be a valid number
     file_text_writeln(file);
     
+    // CONDITIONAL: Only save level/upgrades if they've been confirmed
+    var save_level = Ocherry.player_level;
+    var save_attack = Ocherry.upgrade_attack;
+    var save_speed = Ocherry.upgrade_speed;
+    var save_range = Ocherry.upgrade_range;
+    var save_defence = Ocherry.upgrade_defence;
+    var save_spell = Ocherry.upgrade_spell;
+    var save_history = global.upgrade_history;
+    
+    // If upgrades haven't been confirmed yet, use the loaded values (or 0 if new game)
+    if (instance_exists(Ogame) && !Ogame.upgrades_confirmed) {
+        if (variable_global_exists("confirmed_level")) {
+            save_level = global.confirmed_level;
+            save_attack = global.confirmed_upgrade_attack;
+            save_speed = global.confirmed_upgrade_speed;
+            save_range = global.confirmed_upgrade_range;
+            save_defence = global.confirmed_upgrade_defence;
+            save_spell = global.confirmed_upgrade_spell;
+            save_history = global.confirmed_upgrade_history;
+        } else {
+            // First room, no confirmed upgrades yet
+            save_level = 0;
+            save_attack = 0;
+            save_speed = 0;
+            save_range = 0;
+            save_defence = 0;
+            save_spell = 0;
+            save_history = [];
+        }
+        show_debug_message("SAVING UNCONFIRMED - Using previous confirmed upgrades");
+    } else {
+        show_debug_message("SAVING CONFIRMED UPGRADES");
+    }
+    
     // Save level
-    file_text_write_real(file, Ocherry.player_level);
+    file_text_write_real(file, save_level);
     file_text_writeln(file);
     
     // Save individual upgrade levels
-    file_text_write_real(file, Ocherry.upgrade_attack);
+    file_text_write_real(file, save_attack);
     file_text_writeln(file);
-    file_text_write_real(file, Ocherry.upgrade_speed);
+    file_text_write_real(file, save_speed);
     file_text_writeln(file);
-    file_text_write_real(file, Ocherry.upgrade_range);
+    file_text_write_real(file, save_range);
     file_text_writeln(file);
-    file_text_write_real(file, Ocherry.upgrade_defence);
+    file_text_write_real(file, save_defence);
     file_text_writeln(file);
-    file_text_write_real(file, Ocherry.upgrade_spell);
+    file_text_write_real(file, save_spell);
     file_text_writeln(file);
     
     // Save upgrade history
-    file_text_write_string(file, json_stringify(global.upgrade_history));
+    file_text_write_string(file, json_stringify(save_history));
     file_text_writeln(file);
     
     // Save kill counter
@@ -98,7 +119,7 @@ global.save_progress = function() {
     
     file_text_close(file);
     
-    show_debug_message("SAVED: Room=" + string(room) + " HP=" + string(Ocherry.hp) + " Blood=" + string(blood_value) + " Level=" + string(Ocherry.player_level));
+    show_debug_message("SAVED: Room=" + string(room) + " HP=" + string(Ocherry.hp) + " Blood=" + string(blood_par.blood) + " Level=" + string(save_level));
     
     return true;
 }
@@ -165,6 +186,15 @@ global.load_progress = function() {
     } else {
         global.upgrade_history = [];
     }
+    
+    // STORE CONFIRMED UPGRADES (these were confirmed in previous save)
+    global.confirmed_level = global.loaded_level;
+    global.confirmed_upgrade_attack = global.loaded_upgrade_attack;
+    global.confirmed_upgrade_speed = global.loaded_upgrade_speed;
+    global.confirmed_upgrade_range = global.loaded_upgrade_range;
+    global.confirmed_upgrade_defence = global.loaded_upgrade_defence;
+    global.confirmed_upgrade_spell = global.loaded_upgrade_spell;
+    global.confirmed_upgrade_history = global.upgrade_history;
     
     global.loaded_kill_counter = file_text_read_real(file);
     file_text_readln(file);
@@ -320,9 +350,19 @@ room_start_kill_count = 0;
 showing_upgrade_cards = false;
 upgrade_cards_created = false;
 upgrade_cards_animating = false;
+upgrades_confirmed = false;
+upgraded = false;
+all_cards_popped = false; //Track when all cards are ready
+
+// Make persistent so it doesn't get deactivated
+persistent = true;
+object_set_persistent(object_index, true);
 
 show_upgrade_cards = function() {
     if (!instance_exists(Ocherry)) return;
+    
+    // Reset the flag
+    all_cards_popped = false;
     
     // FREEZE PLAYER FIRST
     Ocherry.hsp = 0;
@@ -371,10 +411,16 @@ show_upgrade_cards = function() {
     var total_width = (num_cards - 1) * card_spacing;
     var start_x = screen_center_x - (total_width / 2);
     
+    // Pop delay between cards (frames)
+    var pop_delay_increment = 20; // 20 frames between each card popping
+    
     for (var i = 0; i < num_cards; i++) {
         var card = instance_create_layer(start_x + (i * card_spacing), screen_center_y, "Instances", Oupgrade_cards);
         card.upgrade_type = shuffled[i];
         card.depth = -9999;
+        
+        // Set pop delay - first card has 0 delay, second has 20, third has 40
+        card.pop_delay = i * pop_delay_increment;
         
         switch(shuffled[i]) {
             case "attack":
@@ -411,4 +457,149 @@ hide_upgrade_cards = function() {
     if (instance_exists(Ocherry)) {
         Ocherry.STATE = Ocherry.STATE_FREE;
     }
+}
+
+
+// TUTORIAL SYSTEM
+tutorial_active = false;
+tutorial_step = 0;
+tutorial_max_steps = 4; // Total number of lessons
+
+// Tutorial completion flags
+tutorial_moved = false;
+tutorial_ran = false;
+tutorial_attacked = false;
+tutorial_strong_attacked = false;
+tutorial_blocked = false;
+tutorial_filled_meter = false;
+tutorial_complete = false;
+
+// Tutorial text positions (spread horizontally across the room)
+tutorial_base_y = 1900; // Y position for all text
+tutorial_spacing = 450; // Distance between each lesson
+
+// Tutorial colors
+tutorial_color_incomplete = c_white;
+tutorial_color_complete = c_lime;
+
+// Function to start tutorial
+start_tutorial = function() {
+    tutorial_active = true;
+    tutorial_step = 0;
+    
+    // Reset all completion flags
+    tutorial_moved = false;
+    tutorial_ran = false;
+    tutorial_attacked = false;
+    tutorial_strong_attacked = false;
+    tutorial_blocked = false;
+    tutorial_filled_meter = false;
+    
+    show_debug_message("Tutorial started");
+}
+
+// Function to check tutorial progress
+check_tutorial_progress = function() {
+    if (!tutorial_active) return;
+    if (!instance_exists(Ocherry)) return;
+    
+    // Lesson 0: Movement
+    if (!tutorial_moved) {
+        // Check if player moved (WASD)
+        if (Ocherry.left || Ocherry.right || Ocherry.up || Ocherry.down) {
+            tutorial_moved = true;
+        }
+	}
+    if (!tutorial_ran) {   
+        // Check if player ran (Shift)
+        if (Ocherry.run and Ocherry.hsp != 0) {
+            tutorial_ran = true;
+        }
+    }
+    
+    // Lesson 1: Attacking
+    if (!tutorial_attacked) {
+        // Check normal attack
+        if (Ocherry.attack3) {
+            tutorial_attacked = true;
+        }
+	}
+    if (!tutorial_strong_attacked) {   
+        // Check strong attack (hold LMB)
+        if (Ocherry.hold_attack) {
+            tutorial_strong_attacked = true;
+        }
+    }
+    
+    // Lesson 2: Blocking
+    if (!tutorial_blocked) {
+        if (Ocherry.blocking || Ocherry.block_deflect) {
+            tutorial_blocked = true;
+        }
+    }
+    
+    // Lesson 3: Fill fire meter
+    if (!tutorial_filled_meter) {
+        // Check if blood bar is filling up
+        if (instance_exists(ObloodPar)) {
+            // Find the blood bar (sprite_index == SbloodPar2)
+            with (ObloodPar) {
+                if (sprite_index == SbloodPar2 && blood > 10) {
+                    other.tutorial_filled_meter = true;
+                }
+            }
+        }
+    }
+	
+	// Lesson complete
+    if (tutorial_blocked and tutorial_filled_meter and tutorial_strong_attacked and tutorial_attacked and tutorial_ran and tutorial_moved) {
+		tutorial_complete = true;
+    }
+}
+
+// Function to draw tutorial text
+draw_tutorial = function() {
+    if (!tutorial_active) return;
+    
+    draw_set_font(Fm5x7XL);
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_middle);
+    
+    // Lesson 0: Movement
+    var lesson0_complete = (tutorial_moved);
+    var lesson0_color = lesson0_complete ? tutorial_color_complete : tutorial_color_incomplete;
+    draw_set_color(lesson0_color);
+    draw_text(500, tutorial_base_y+400, "analog stick / D-pad \nWASD to move");
+	
+	// Lesson 1: Running
+    var lesson1_complete = (tutorial_ran);
+    var lesson1_color = lesson1_complete ? tutorial_color_complete : tutorial_color_incomplete;
+    draw_set_color(lesson1_color);
+    draw_text(1700, tutorial_base_y+400, "L2 \nSHIFT to run");
+    
+    // Lesson 2: Attacking
+    var lesson2_complete = (tutorial_attacked);
+    var lesson2_color = lesson2_complete ? tutorial_color_complete : tutorial_color_incomplete;
+    draw_set_color(lesson2_color);
+    draw_text(2500, tutorial_base_y, "R2 \nLMB 3 times to attack");
+	
+	// Lesson 3: Hold Attack
+    var lesson3_complete = (tutorial_strong_attacked);
+    var lesson3_color = lesson3_complete ? tutorial_color_complete : tutorial_color_incomplete;
+    draw_set_color(lesson3_color);
+    draw_text(4000, tutorial_base_y, "hold R2 \nHold LMB for strong attack");
+    
+    // Lesson 4: Blocking
+    var lesson4_complete = tutorial_blocked;
+    var lesson4_color = lesson4_complete ? tutorial_color_complete : tutorial_color_incomplete;
+    draw_set_color(lesson4_color);
+    draw_text(6000, tutorial_base_y, "Hold R1 \nHold RMB to block (doesn't block all damage)");
+    
+    // Lesson 5: Fill meter
+    var lesson5_complete = tutorial_filled_meter;
+    var lesson5_color = lesson5_complete ? tutorial_color_complete : tutorial_color_incomplete;
+    draw_set_color(lesson5_color);
+    draw_text(8300, tutorial_base_y+65, "Hit enemies or players to fill your fire meter");
+	draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
 }

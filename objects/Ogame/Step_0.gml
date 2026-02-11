@@ -58,8 +58,39 @@ if(room == Rintro)
 
 //key
 //check for enemies 
-if(!instance_exists(Ojack)) and (!instance_exists(Owillson)) and (!instance_exists(Ojaison)) and (!instance_exists(Oflying)) and (!global.key) and (room != Ressance) and (room != Rtutorial)
+if(room != Rtutorial)
 {
-	if(!audio_is_playing(SNcheckpoint)) audio_play_sound(SNcheckpoint,11,false);
-	global.key = true
+	if(!instance_exists(Ojack)) and (!instance_exists(Owillson)) and (!instance_exists(Ojaison)) and (!instance_exists(Oflying)) and (!global.key) and (room != Rmain_menu)
+	{
+		if(!audio_is_playing(SNcheckpoint)) audio_play_sound(SNcheckpoint,11,false);
+		global.key = true
+	}
+}
+else
+{
+	if(!instance_exists(Ojack)) and (!instance_exists(Owillson)) and (!instance_exists(Ojaison)) and (!instance_exists(Oflying)) and (!global.key) and (room != Rmain_menu) and (tutorial_complete)
+	{
+		if(!audio_is_playing(SNcheckpoint)) audio_play_sound(SNcheckpoint,11,false);
+		global.key = true
+	}
+}
+
+// Tutorial system
+if (room == Rtutorial) {
+    if (!tutorial_active) {
+        start_tutorial();
+    }
+    
+    check_tutorial_progress();
+} else {
+    // Disable tutorial in other rooms
+    if (tutorial_active) {
+        tutorial_active = false;
+    }
+}
+
+if(global.key) and (!upgraded) 
+{
+	alarm[0] = 5;
+	upgraded = true;
 }

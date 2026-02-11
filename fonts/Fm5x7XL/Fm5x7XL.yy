@@ -1,6 +1,6 @@
 {
   "$GMFont":"",
-  "%Name":"Fm5x7XXL",
+  "%Name":"Fm5x7XL",
   "AntiAlias":1,
   "applyKerning":0,
   "ascender":100,
@@ -117,7 +117,7 @@
   "last":0,
   "lineHeight":117,
   "maintainGms1Font":false,
-  "name":"Fm5x7XXL",
+  "name":"Fm5x7XL",
   "parent":{
     "name":"Fonts",
     "path":"folders/Fonts.yy",

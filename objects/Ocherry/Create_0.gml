@@ -27,6 +27,7 @@ dead = false;
 wasGround = false;
 fallBuffer = 0;
 bounce = false;
+pause = false;
 
 //jumping
 grv = 0.4;
@@ -461,7 +462,7 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
                     if(fire_defence) var _spinning = Sspinning_fire;
                     else var _spinning = Sspinning_blade;
                     
-                    with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_blade)) {
+                    with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_thorns)) {
                         sprite_index = _spinning;
                         damage = 2;
                         image_xscale = other.face * 0.5;
@@ -476,7 +477,7 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
                     if(fire_defence) var _spinning = Sspinning_fire;
                     else var _spinning = Sspinning_blade;
                     
-                    with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_blade)) {
+                    with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_thorns)) {
                         sprite_index = _spinning;
                         damage = 4;
                         image_xscale = other.face * 0.75;
@@ -587,7 +588,7 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
 
 //states 
 STATE_FREE = function()
-{
+{	
     // --- Update wall_id every frame ---
     var wall_left = instance_place(x-20, y, Owall);
     var wall_right = instance_place(x+20, y, Owall);
@@ -1193,7 +1194,7 @@ STATE_FREE = function()
 		        if( fire_mode) var _sprite = SslashFire2;
 		        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
 		        {
-		            damage = (5 + (other.upgrade_attack * other.attack_damage_per_level)) * 1.5; // bigger damage
+		            damage = (5 + (other.upgrade_attack * other.attack_damage_per_level)) * 2; // doule damage
 		            sprite_index = _sprite;
 		            image_xscale = other.face * 1.5; // 1.5x size
 		            image_yscale = 1.5; // 1.5x size
@@ -2116,9 +2117,8 @@ STATE_PAUSE = function()
     vsp = 0; 
     grv = 0;
     
-    // Force zero movement every frame
-    x = x;
-    y = y;
+	image_index = 0;
+	
 }
 
 STATE_FUSE = function()
@@ -2161,7 +2161,20 @@ STATE_DEAD = function() {
         
         // === CRITICAL FIX: SAVE PROGRESS NOW (with reset stats) ===
         // This ensures the save file has HP=100 and Blood=0, not the death values
+        // AND saves the REDUCED level/upgrades from death penalty
         if (instance_exists(Ogame)) {
+            // Mark upgrades as CONFIRMED so they save at the reduced level
+            Ogame.upgrades_confirmed = true;
+            
+            // Store the NEW reduced values as confirmed
+            global.confirmed_level = player_level;
+            global.confirmed_upgrade_attack = upgrade_attack;
+            global.confirmed_upgrade_speed = upgrade_speed;
+            global.confirmed_upgrade_range = upgrade_range;
+            global.confirmed_upgrade_defence = upgrade_defence;
+            global.confirmed_upgrade_spell = upgrade_spell;
+            global.confirmed_upgrade_history = global.upgrade_history;
+            
             global.save_progress();
             show_debug_message("SAVED AFTER DEATH: HP=" + string(hp) + " Blood=0 Level=" + string(player_level));
         }

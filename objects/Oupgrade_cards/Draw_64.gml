@@ -1,16 +1,14 @@
-// At the top of Draw GUI Event
+/// Draw GUI Event
+// Don't draw if scale is 0 (waiting for pop delay)
+if (hover_scale <= 0) exit;
+
+// Debug for selected state
 if (card_state == "selected") {
     show_debug_message("DRAW GUI - Card exists, state: " + card_state + " timer: " + string(animation_timer));
 }
 
-
-// Draw GUI Event
-// Get camera dimensions
-var cam_width = camera_get_view_width(view_camera[0]);
-var cam_height = camera_get_view_height(view_camera[0]);
-
 // Draw the card sprite
-draw_sprite_ext(sprite_index, image_index, x, y, hover_scale, hover_scale, 0, c_white, 1);
+draw_sprite_ext(sprite_index, image_index, x, y, hover_scale, hover_scale, 0, c_white, image_alpha);
 
 // Draw upgrade type text below card with larger font
 draw_set_halign(fa_center);
@@ -39,8 +37,10 @@ switch(upgrade_type) {
 
 // Calculate text position (accounting for scale)
 var text_y = y + (sprite_get_height(sprite_index) * hover_scale / 2) + 75;
+
 // Draw text with additional scaling (you can adjust the 3 multiplier)
 draw_text_transformed(x, text_y, display_name, hover_scale * 3, hover_scale * 3, 0);
 
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
+draw_set_color(c_white);

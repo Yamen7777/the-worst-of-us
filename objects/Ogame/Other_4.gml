@@ -36,8 +36,9 @@ draw_text_transformed(
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
 
-//key
+//key and upgrade
 global.key = false;
+upgraded = false;
 
 //create the player
 if(!instance_exists(Ocherry)) and (room != Rmain_menu)

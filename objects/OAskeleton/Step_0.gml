@@ -350,7 +350,7 @@ for (var i = 0; i < array_length(damage_objects); i++) {
             }
         }
         
-        if (object_get_name(obj_type) == "Oblade_back") {
+        if (object_get_name(obj_type) == "OfireBreath") {
             with (obj_type) {
                 if (place_meeting(x, y, other)) {
                     // Check if dodging (invincible during dodge)
