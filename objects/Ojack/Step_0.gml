@@ -65,7 +65,7 @@ if (!attacking && attack_cooldown == 0) {
         if (_distance <= attack_range) {
             // Start attack
             attacking = true;
-            sprite_index = Szombie1AT;
+            sprite_index = Sbandit1A;
             image_index = 0;
             attack_created = [false, false]; // Reset attack tracking
         }
@@ -88,21 +88,8 @@ if (attacking) {
         }
     }
     
-    // Second attack - at frame 2
-    if (image_index >= 2 && !attack_created[1]) {
-        attack_created[1] = true;
-        
-        // Create second attack hitbox
-        var _attackX = x + (face * 175); // Adjust offset as needed
-        with (instance_create_layer(_attackX, y - 200, "bullets", OZ1attack)) {
-			damage = 3.5;
-            image_xscale = other.face;
-			image_angle -= 35*other.face;
-        }
-    }
-    
     // Check if animation finished (reached frame 5)
-    if (image_index >= 4) { // Frame 4 is the last frame
+    if (image_index >= image_number -1) { // Frame 4 is the last frame
         attacking = false;
         attack_cooldown = attack_cooldown_time;
     }
@@ -114,7 +101,7 @@ if (!place_meeting(x, y + 1, wall)) {
     
     // Don't change sprite if attacking or being hit
     if (!attacking && !invincible) {
-        sprite_index = Szombie1;
+        sprite_index = Sbandit1;
         image_speed = 0;
         if (sign(vsp) > 0) image_index = 1; else image_index = 0;
     }
@@ -125,9 +112,9 @@ if (!place_meeting(x, y + 1, wall)) {
     if (!attacking && !invincible) {
         image_speed = 1;
         if (hsp == 0) {
-            sprite_index = Szombie1;
+            sprite_index = Sbandit1;
         } else {
-            sprite_index = Szombie1W;
+            sprite_index = Sbandit1W;
         }
     }
 }
@@ -140,8 +127,9 @@ image_yscale = size;
 if (invincible) {
     invincible_timer--;
     image_alpha = 0.9;
-    sprite_index = Szombie1HT;
-    image_speed = 1; // Make sure animation plays
+    sprite_index = Sbandit1H;
+    image_speed = 1;
+	image_blend = c_red;
     
     if (invincible_timer <= 0) {
         invincible_timer = invincible_time;
@@ -151,11 +139,17 @@ if (invincible) {
     }
 } else {
     image_alpha = 1;
-    image_blend = c_white;
+    // Only reset to white if not being damaged by fire/thorns
+    if (image_blend == c_red) {
+        // Fade red back to white quickly
+        image_blend = merge_color(image_blend, c_white, 0.3);
+    } else {
+        image_blend = c_white;
+    }
 }
 
 // Circle detection and follow Ocherry
-if (instance_exists(Ocherry) && !invincible) {
+if (instance_exists(Ocherry) && !invincible) and (!attacking) {
     var _cherry = Ocherry;
     var _detectionRadius = 2500;
     var _distance = point_distance(x, y, _cherry.x, _cherry.y);
@@ -165,8 +159,8 @@ if (instance_exists(Ocherry) && !invincible) {
     
     // Check if Ocherry is within detection range
     if (_distance <= _detectionRadius) {
-        audio_sound_pitch(SNzobmie, 0.8);
-        if (!audio_is_playing(SNzobmie) && hp > 0) audio_play_sound(SNzobmie, 3, true);
+        //audio_sound_pitch(SNzobmie, 0.8);
+        //if (!audio_is_playing(SNzobmie) && hp > 0) audio_play_sound(SNzobmie, 3, true);
         flip = false;
         
         // Calculate horizontal distance to Ocherry
@@ -203,38 +197,51 @@ for (var i = 0; i < array_length(damage_objects); i++) {
     var obj_type = damage_objects[i];
     
     if (instance_exists(obj_type)) {
-        // SPECIAL CASE: Oblade_back - check ALL colliding instances
-        if (object_get_name(obj_type) == "Oblade_back") {
-            with (obj_type) {
-                if (place_meeting(x, y, other)) {
-                    if (ds_list_find_index(other.damaged_by_list, id) == -1) {
-                        other.hp -= damage;
-                        if (instance_exists(Owerewolf) && !Owerewolf.transform) {
-                            ObloodPar.blood += damage;
-                        }
-                        other.hsp = sign(other.x - x) * 10;
-                        
-                        // Cancel attack when hit
-                        other.attacking = false;
-                        other.attack_cooldown = other.attack_cooldown_time;
-                        
-                        ds_list_add(other.damaged_by_list, id);
-                        other.invincible = true;
-                        other.invincible_clear_timer = other.invincible_clear_time;
-                    }
+        var damager = instance_place(x, y, obj_type);
+        
+        if (damager != noone) {
+            // SPECIAL CASE 1: OfireBreath - damage every frame, no invincibility
+            if (object_get_name(obj_type) == "OfireBreath") {
+                hp -= damager.damage;
+                if (instance_exists(ObloodPar)) {
+                    ObloodPar.blood += damager.damage;
                 }
+                // Visual feedback but no stun
+                 hsp = sign(x - damager.x); // Knockback
+                    
+                // Cancel attack when hit
+                attacking = false;
+                attack_cooldown = attack_cooldown_time;
+                    
+                ds_list_add(damaged_by_list, damager);
+                invincible = true;
+                invincible_clear_timer = invincible_clear_time;
             }
-        }
-        // NORMAL CASE: Other damage sources
-        else {
-            var damager = instance_place(x, y, obj_type);
-            if (damager != noone) {
+            // SPECIAL CASE 2: Ospinning_thorns - damage but no stun/knockback
+            else if (object_get_name(obj_type) == "Ospinning_thorns") {
                 if (ds_list_find_index(damaged_by_list, damager) == -1) {
                     hp -= damager.damage;
-                    if (instance_exists(Owerewolf) && !Owerewolf.transform) {
+                    if (instance_exists(ObloodPar)) {
                         ObloodPar.blood += damager.damage;
                     }
-                    hsp = sign(x - damager.x) * 10;
+                    // Visual feedback only - red flash
+                    image_blend = c_red;
+                    
+                    // Add to damaged list so it only hits once per thorn
+                    ds_list_add(damaged_by_list, damager);
+                    invincible_clear_timer = invincible_clear_time;
+                    
+                    // NO invincibility, NO knockback, NO sprite change, NO attack cancel
+                }
+            }
+            // NORMAL CASE: All other damage sources
+            else {
+                if (ds_list_find_index(damaged_by_list, damager) == -1) {
+                    hp -= damager.damage;
+                    if (instance_exists(ObloodPar)) {
+                        ObloodPar.blood += damager.damage;
+                    }
+                    hsp = sign(x - damager.x); // Knockback
                     
                     // Cancel attack when hit
                     attacking = false;
@@ -265,5 +272,9 @@ if (attack_cooldown > 0) {
     attack_cooldown--;
 }
 
+// TEST: Press K to increase blood
+if (keyboard_check_pressed(ord("J"))) {
+    hp = 1000;
+}
 
 

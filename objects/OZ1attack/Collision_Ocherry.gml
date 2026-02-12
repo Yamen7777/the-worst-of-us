@@ -1,1 +1,0 @@
-other.damage_taken(damage,x,image_xscale);

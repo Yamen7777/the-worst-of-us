@@ -43,12 +43,12 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"Szombie1",
-    "path":"sprites/Szombie1/Szombie1.yy",
+    "name":"Sbandit1",
+    "path":"sprites/Sbandit1/Sbandit1.yy",
   },
   "spriteMaskId":{
-    "name":"Sjack",
-    "path":"sprites/Sjack/Sjack.yy",
+    "name":"Sbandit1",
+    "path":"sprites/Sbandit1/Sbandit1.yy",
   },
   "visible":true,
 }

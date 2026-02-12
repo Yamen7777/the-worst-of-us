@@ -10,7 +10,7 @@ start_x = x;
 start_y = y;
 max_distance = 1750;
 
-damage = 15;
+damage = 25;
 
 //enemies and walls
 _obstacle = [Owall,Ojack,Odummy,OdummyF];

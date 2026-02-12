@@ -12,8 +12,8 @@ if(image_index == 2)
 			{
 				sprite_index = _sprite;
 				// Calculate damage based on range upgrade
-				// Base damage 2 + (upgrade_range * 2)
-				damage = 2 + (Ocherry.upgrade_range * 2) * 2;
+				// Scales: 3.2, 4.4, 5.6, 6.8, 8 (doubled for hold)
+                damage = (2 + (Ocherry.upgrade_range * 1.2)) * 2;
                 
 				// Calculate max distance based on range upgrade
 				// Range scales from 400 (level 1) to 2000 (level 5)
@@ -32,8 +32,8 @@ if(image_index == 2)
 			{
 				sprite_index = _sprite;
 				// Calculate damage based on range upgrade
-				// Base damage 2 + (upgrade_range * 2)
-				damage = 2 + (Ocherry.upgrade_range * 2);
+				// Scales: 3.2 -> 4.4 -> 5.6 -> 6.8 -> 8
+                damage = 2 + (Ocherry.upgrade_range * 1.2);
                 
 				// Calculate max distance based on range upgrade
 				// Range scales from 400 (level 1) to 2000 (level 5)

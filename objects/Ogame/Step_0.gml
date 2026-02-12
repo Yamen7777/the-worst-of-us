@@ -68,7 +68,7 @@ if(room != Rtutorial)
 }
 else
 {
-	if(!instance_exists(Ojack)) and (!instance_exists(Owillson)) and (!instance_exists(Ojaison)) and (!instance_exists(Oflying)) and (!global.key) and (room != Rmain_menu) and (tutorial_complete)
+	if(!instance_exists(Ojack)) and (!global.key) and (room != Rmain_menu) and (tutorial_complete)
 	{
 		if(!audio_is_playing(SNcheckpoint)) audio_play_sound(SNcheckpoint,11,false);
 		global.key = true

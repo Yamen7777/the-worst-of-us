@@ -1,9 +1,7 @@
 {
   "$GMObject":"",
   "%Name":"OlevelBACK",
-  "eventList":[
-    {"$GMEvent":"v1","%Name":"","collisionObjectId":{"name":"Ocherry","path":"objects/Ocherry/Ocherry.yy",},"eventNum":0,"eventType":4,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
-  ],
+  "eventList":[],
   "managed":true,
   "name":"OlevelBACK",
   "overriddenProperties":[],
