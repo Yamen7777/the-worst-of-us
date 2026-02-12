@@ -75,21 +75,22 @@ if (!attacking && attack_cooldown == 0) {
 //attack animation
 if (attacking) {
 	hsp = 0;
-    // First attack - at frame 0 (immediately)
-    if (image_index >= 0 && !attack_created[0]) {
+    // First attack - at frame 2
+    if (image_index >= 2 && !attack_created[0]) {
         attack_created[0] = true;
         
         // Create first attack hitbox
-        var _attackX = x + (face * 175); // Adjust offset as needed
-        with (instance_create_layer(_attackX, y - 200, "bullets", OZ1attack)) {
-			damage = 3.5;
+        var _attackX = x + (face * 165);
+        with (instance_create_layer(_attackX, y - 200, "bullets", Obandit_attacks)) {
+			sprite_index = Saxe_attack;
+			damage = other.current_damage; // Use calculated damage
             image_xscale = other.face;
-			image_angle -= 35*other.face;
+			image_angle += 35*other.face;
         }
     }
     
-    // Check if animation finished (reached frame 5)
-    if (image_index >= image_number -1) { // Frame 4 is the last frame
+    // Check if animation finished
+    if (image_index >= image_number -1) {
         attacking = false;
         attack_cooldown = attack_cooldown_time;
     }

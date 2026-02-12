@@ -1,3 +1,3 @@
 collistion = false;
 
-trigger = false;
+triggered = false;

@@ -1,0 +1,1 @@
+if(sprite_index == Sbullet_impact) instance_destroy();
