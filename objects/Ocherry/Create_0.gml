@@ -129,6 +129,7 @@ block_deflect_started = false;
 block_deflect_duration = 25; // 5 frames at 12fps (5 * 60/12 = 25)
 block_deflect_timer = 0;
 block_blade_created = false; // Track if blade was created this block
+damage_blocked = false; // Track if last hit was blocked (for red flash intensity)
 
 // Spell system
 //icons
@@ -418,7 +419,7 @@ if (global.spawn_x == -1) {
     global.spawn_y = ystart;
 }
 
-damage_taken = function(_damage, _source_x = undefined, _source_facing = undefined)
+damage_taken = function(_damage, _source_x = undefined, _source_facing = undefined, _unblockable = false)
 {
     // If we are currently in hitstun, ignore further damage
     if (hitstun_time > 0) or (dashing) return;
@@ -436,6 +437,8 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
     // Variable to track if we're blocking successfully
     var _blocked_successfully = false;
     var _final_damage = _damage; // Start with full damage
+    var _hit_from_behind = false; // Track if hit from behind while blocking
+    var _shield_broken = false; // Track if shield was broken by unblockable attack
     
     // --- BLOCKING CHECK ---
     if (blocking && _source_facing != undefined) {
@@ -443,62 +446,85 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
         var _facing_each_other = (face != _source_facing);
         
         if (_facing_each_other) {
-            // Successfully blocked!
-            _blocked_successfully = true;
-            block_deflect = true;
-            block_deflect_started = true;
-            block_deflect_timer = block_deflect_duration;
-            blocking = true;
-            
-            // Apply defence reduction when blocking
-            _final_damage = _damage * (1 - current_defence);
-            
-            // Create spinning blade on block (level 4 and 5) - ONLY ONCE PER BLOCK
-            if (!block_blade_created) {
-                if (upgrade_defence == 4) {
-                    var _blade_x = x + (face * 50);
-                    var _blade_y = y - 180;
-                    
-                    if(fire_defence) var _spinning = Sspinning_fire;
-                    else var _spinning = Sspinning_blade;
-                    
-                    with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_thorns)) {
-                        sprite_index = _spinning;
-                        damage = 2;
-                        image_xscale = other.face * 0.5;
-                        image_yscale = 0.5;
-                        max_distance = 400;
+            // Check if attack is unblockable (breaks shield)
+            if (_unblockable) {
+                // SHIELD BREAK! Unblockable attack hits through block
+                _shield_broken = true;
+                blocking = false;
+                block_deflect = false;
+                block_deflect_timer = 0;
+                block_blade_created = false;
+                
+                // Play shield break sound
+                audio_play_sound(SNdamage, 1, false);
+                
+                // Full damage taken (no block reduction)
+                _final_damage = _damage;
+            } else {
+                // Successfully blocked!
+                _blocked_successfully = true;
+                block_deflect = true;
+                block_deflect_started = true;
+                block_deflect_timer = block_deflect_duration;
+                blocking = true;
+                
+                // Apply defence reduction when blocking
+                _final_damage = _damage * (1 - current_defence);
+                
+                // Create spinning blade on block (level 4 and 5) - ONLY ONCE PER BLOCK
+                if (!block_blade_created) {
+                    if (upgrade_defence == 4) {
+                        var _blade_x = x + (face * 50);
+                        var _blade_y = y - 180;
+                        
+                        if(fire_defence) var _spinning = Sspinning_fire;
+                        else var _spinning = Sspinning_blade;
+                        
+                        with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_thorns)) {
+                            sprite_index = _spinning;
+                            damage = 2;
+                            image_xscale = other.face * 0.5;
+                            image_yscale = 0.5;
+                            max_distance = 400;
+                        }
+                        block_blade_created = true;
+                    } else if (upgrade_defence >= 5) {
+                        var _blade_x = x + (face * 50);
+                        var _blade_y = y - 180;
+                        
+                        if(fire_defence) var _spinning = Sspinning_fire;
+                        else var _spinning = Sspinning_blade;
+                        
+                        with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_thorns)) {
+                            sprite_index = _spinning;
+                            damage = 4;
+                            image_xscale = other.face * 0.75;
+                            image_yscale = 0.75;
+                            max_distance = 800;
+                        }
+                        block_blade_created = true;
                     }
-                    block_blade_created = true;
-                } else if (upgrade_defence >= 5) {
-                    var _blade_x = x + (face * 50);
-                    var _blade_y = y - 180;
-                    
-                    if(fire_defence) var _spinning = Sspinning_fire;
-                    else var _spinning = Sspinning_blade;
-                    
-                    with(instance_create_layer(_blade_x, _blade_y, "bullets", Ospinning_thorns)) {
-                        sprite_index = _spinning;
-                        damage = 4;
-                        image_xscale = other.face * 0.75;
-                        image_yscale = 0.75;
-                        max_distance = 800;
-                    }
-                    block_blade_created = true;
                 }
+                
+                // Knockback when blocking
+                var _kb_dist = 4;
+                var _dir = -face;
+                
+                for (var i = 0; i < _kb_dist; i++) {
+                    if (!place_meeting(x + _dir, y, Owall)) {
+                        x += _dir;
+                    } else break;
+                }
+                
+                vsp = min(vsp, -2);
             }
-            
-            // Knockback when blocking
-            var _kb_dist = 4;
-            var _dir = -face;
-            
-            for (var i = 0; i < _kb_dist; i++) {
-                if (!place_meeting(x + _dir, y, Owall)) {
-                    x += _dir;
-                } else break;
-            }
-            
-            vsp = min(vsp, -2);
+        } else {
+            // Blocking but hit from behind - not a successful block!
+            _hit_from_behind = true;
+            blocking = false; // Immediately stop blocking to show hit animation
+            block_deflect = false;
+            block_deflect_timer = 0;
+            block_blade_created = false;
         }
     }
     
@@ -506,11 +532,15 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
     hp -= _final_damage;
     if (hp < 0) hp = 0;
     
+    // Track if damage was blocked for visual effect
+    damage_blocked = _blocked_successfully;
+    
     // Only apply hitstun and knockback if we took damage
     if (_final_damage > 0) {
         hitstun_time = 20;
         
-        if (!_blocked_successfully) {
+        // If shield was broken or hit from behind, clear blocking state
+        if (_shield_broken || !_blocked_successfully && !_hit_from_behind) {
             blocking = false;
             block_deflect = false;
             block_deflect_timer = 0;
@@ -554,13 +584,15 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
             }
         }
         
-        var _kb_dist = _blocked_successfully ? 4 : 8;
-        var _kb_hsp = _blocked_successfully ? 4 : 8;
+        // Use unblocked knockback if shield was broken
+        var _is_blocked = _blocked_successfully && !_shield_broken;
+        var _kb_dist = _is_blocked ? 4 : 8;
+        var _kb_hsp = _is_blocked ? 4 : 8;
         
         hsp = _dir * _kb_hsp;
         vsp = min(vsp, -2);
         
-        if (!_blocked_successfully) {
+        if (!_is_blocked) {
             for (var i = 0; i < _kb_dist; i++)
             {
                 if (!place_meeting(x + _dir, y, Owall))
@@ -1054,8 +1086,8 @@ STATE_FREE = function()
 		}
 	}
 	
-	// Blocking
-	if (HRMB && ground && !attack && !sliding_ground) {  // Added !sliding_ground
+	// Blocking (can't block while in hitstun - prevents blocking when hit from behind)
+	if (HRMB && ground && !attack && !sliding_ground && hitstun_time == 0) {
 	    blocking = true;
 	    hsp = 0; // Stop movement while blocking
 	} else if (!block_deflect) {

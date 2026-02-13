@@ -54,13 +54,19 @@ general_input();
 if (hitstun_time > 0)
 {
 	image_alpha = 0.9;
-	image_blend = c_red;
+	// Less intense red if damage was blocked (taking less damage)
+	if (damage_blocked) {
+		image_blend = make_color_rgb(255, 150, 150); // Lighter red for blocked damage
+	} else {
+		image_blend = c_red; // Full red for unblocked damage
+	}
 	hitstun_time--;
 }
 else
 {
 	image_alpha = 1;
 	image_blend = c_white;
+	damage_blocked = false; // Reset blocked damage tracker
 }
 
 
@@ -184,7 +190,13 @@ else if(STATE = STATE_DEAD)
 {
     sprite_index = ScabeD;
 }
-//block deflect (successful block animation) - MOVED BEFORE HITSTUN
+//hitstun - PRIORITY: Show hit animation when taking damage (even if blocking button held)
+// This covers both normal hits and hits from behind while blocking
+else if (hitstun_time > 0 && !block_deflect)
+{
+    sprite_index = ScabeHT;
+}
+//block deflect (successful block animation)
 else if (block_deflect) {
     if(fire_defence) sprite_index = SFcabeBD;
     else sprite_index = ScabeBD;
@@ -193,15 +205,10 @@ else if (block_deflect) {
         block_deflect_started = false;
     }
 }
-//blocking idle - MOVED BEFORE HITSTUN
+//blocking idle
 else if (blocking) {
     if(fire_defence) sprite_index = SFcabeB;
     else sprite_index = ScabeB;
-}
-//hitstun (only show if NOT blocking)
-else if (hitstun_time > 0)
-{
-    sprite_index = ScabeHT;
 }
 //spell 1
 else if (spell1_active) {

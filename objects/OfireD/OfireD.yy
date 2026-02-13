@@ -40,12 +40,9 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"Sbandit1D",
-    "path":"sprites/Sbandit1D/Sbandit1D.yy",
+    "name":"SfireD",
+    "path":"sprites/SfireD/SfireD.yy",
   },
-  "spriteMaskId":{
-    "name":"Sbandit1",
-    "path":"sprites/Sbandit1/Sbandit1.yy",
-  },
+  "spriteMaskId":null,
   "visible":true,
 }

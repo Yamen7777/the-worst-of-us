@@ -10,12 +10,17 @@
   ],
   "managed":true,
   "name":"Ofire",
-  "overriddenProperties":[],
+  "overriddenProperties":[
+    {"$GMOverriddenProperty":"v1","%Name":"","name":"","objectId":{"name":"Ojack","path":"objects/Ojack/Ojack.yy",},"propertyId":{"name":"base_hp","path":"objects/Ojack/Ojack.yy",},"resourceType":"GMOverriddenProperty","resourceVersion":"2.0","value":"45",},
+  ],
   "parent":{
     "name":"enemies",
     "path":"folders/Objects/enemies.yy",
   },
-  "parentObjectId":null,
+  "parentObjectId":{
+    "name":"Ojack",
+    "path":"objects/Ojack/Ojack.yy",
+  },
   "persistent":false,
   "physicsAngularDamping":0.1,
   "physicsDensity":0.5,
@@ -46,12 +51,12 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"Sbandit1",
-    "path":"sprites/Sbandit1/Sbandit1.yy",
+    "name":"Sfire",
+    "path":"sprites/Sfire/Sfire.yy",
   },
   "spriteMaskId":{
-    "name":"Sbandit1",
-    "path":"sprites/Sbandit1/Sbandit1.yy",
+    "name":"Sfire",
+    "path":"sprites/Sfire/Sfire.yy",
   },
   "visible":true,
 }
