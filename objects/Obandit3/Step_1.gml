@@ -14,7 +14,7 @@ if (hp <= 0)
 	var drop_chance = 0; // Default no drop
 	
 	if (potion == 1) {
-	    drop_chance = 10; // 10% chance
+	    drop_chance = 20; // 10% chance
 	} else if (potion == 2) {
 	    drop_chance = 100; // 100% chance, small potion
 	} else if (potion == 3) {
@@ -32,7 +32,7 @@ if (hp <= 0)
 	        potion_inst.is_big = false; // Force small potion
 	    } else {
 	        // Normal drop (10% big, 90% small)
-	        potion_inst.is_big = (random(100) < 10);
+	        potion_inst.is_big = (random(100) < 20);
 	    }
 	    
 	    // Set initial upward velocity

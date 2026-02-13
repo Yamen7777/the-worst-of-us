@@ -1,3 +1,4 @@
+/*
 // Draw player level and upgrade debug info
 draw_set_font(Fm5x7L);
 draw_set_halign(fa_left);
@@ -23,7 +24,7 @@ draw_set_valign(fa_top);
 draw_set_font(FLM);
 draw_set_colour(c_red);
 draw_text(700,500,string(hp));
-
+*/
 //draw level
 if(instance_exists(OhealthPar))
 {

@@ -12,7 +12,7 @@
   "name":"Obandit2",
   "overriddenProperties":[
     {"$GMOverriddenProperty":"v1","%Name":"","name":"","objectId":{"name":"Ojack","path":"objects/Ojack/Ojack.yy",},"propertyId":{"name":"potion","path":"objects/Ojack/Ojack.yy",},"resourceType":"GMOverriddenProperty","resourceVersion":"2.0","value":"1",},
-    {"$GMOverriddenProperty":"v1","%Name":"","name":"","objectId":{"name":"Ojack","path":"objects/Ojack/Ojack.yy",},"propertyId":{"name":"base_hp","path":"objects/Ojack/Ojack.yy",},"resourceType":"GMOverriddenProperty","resourceVersion":"2.0","value":"70",},
+    {"$GMOverriddenProperty":"v1","%Name":"","name":"","objectId":{"name":"Ojack","path":"objects/Ojack/Ojack.yy",},"propertyId":{"name":"base_hp","path":"objects/Ojack/Ojack.yy",},"resourceType":"GMOverriddenProperty","resourceVersion":"2.0","value":"25",},
   ],
   "parent":{
     "name":"enemies",
