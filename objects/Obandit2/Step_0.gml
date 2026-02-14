@@ -296,9 +296,4 @@ if (attack_cooldown > 0) {
     attack_cooldown--;
 }
 
-// TEST: Press K to increase blood
-if (keyboard_check_pressed(ord("J"))) {
-    hp = 1000;
-}
-
 

@@ -22,9 +22,10 @@ var danger_budget = 20;
 // [object_type, danger_cost]
 enemy_types = [
     [Ojack, 3],
-    [Obandit2, 3],
-    [Obandit3, 4],
-    [Ofire, 20]
+    [Obandit2, 4],
+    [Obandit3, 5],
+    [Ofire, 20],
+    [Owind, 20],
 ];
 
 // Build spawn queue based on danger budget

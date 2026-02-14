@@ -4,13 +4,23 @@ if(target == "restart")
     TRANS(TRANS_MODE.RESTART,"strawberry");
 }
 else {
+    // Define random room choices
+    var room_choices = [Room1, Room2, Room3, Room6, Room7, Room8, Room11, Room12, Room13];
+    var chosen_room = room_choices[irandom(array_length(room_choices) - 1)];
+    
+    // Fixed spawn position for all rooms
+    var chosen_spawn_x = 544;
+    var chosen_spawn_y = 2304;
+    
+    show_debug_message("Random room selected: " + string(chosen_room));
+    
     with (Ocherry) {
         if (hasControl) {
             hasControl = false;
             
-            // Set spawn position for next room (will be saved when next room starts)
-            global.spawn_x = other.spawn_x;
-            global.spawn_y = other.spawn_y;
+            // Set spawn position for next room (fixed position)
+            global.spawn_x = chosen_spawn_x;
+            global.spawn_y = chosen_spawn_y;
             global.has_checkpoint = true;
             
             // SAVE PROGRESS BEFORE TRANSITIONING
@@ -25,8 +35,8 @@ else {
             if (file_exists(SAVEFILE_MAIN)) file_delete(SAVEFILE_MAIN);
             var file = file_text_open_write(SAVEFILE_MAIN);
             
-            // Save TARGET room (the room we're going to)
-            file_text_write_real(file, other.target);
+            // Save TARGET room (the randomly chosen room)
+            file_text_write_real(file, chosen_room);
             file_text_writeln(file);
             
             // Save spawn position for target room
@@ -78,15 +88,15 @@ else {
             
             show_debug_message("SAVED BEFORE TRANSITION");
             
-            // Transition to next room
+            // Transition to random room
             if(OLevelEND.transition == 0) {
-                TRANS(TRANS_MODE.GOTO,"strawberry", other.target);
+                TRANS(TRANS_MODE.GOTO,"strawberry", chosen_room);
             }
             if (OLevelEND.transition == 1) {
-                TRANS(TRANS_MODE.GOTO,"strawberry", other.target);
+                TRANS(TRANS_MODE.GOTO,"strawberry", chosen_room);
             }
             if (OLevelEND.transition == 2) {
-                TRANS(TRANS_MODE.GOTO,"thunder", other.target);
+                TRANS(TRANS_MODE.GOTO,"thunder", chosen_room);
             }
         }
     }

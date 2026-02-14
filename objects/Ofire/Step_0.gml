@@ -449,8 +449,3 @@ if (invincible_clear_timer > 0) {
         ds_list_clear(damaged_by_list);
     }
 }
-
-// ========== DEBUG/TEST ==========
-if (keyboard_check_pressed(ord("J"))) {
-    hp = 1000;
-}

@@ -5,6 +5,10 @@ if (room == Rtutorial) {
 
 if(room == Rtutorial)
 {
+	draw_set_halign(fa_left);
+	draw_set_valign(fa_middle);
+	draw_set_colour(c_yellow)
+	draw_text(12300,3200,"GOAL: reach level 25")
 	if(tutorial_complete)
 	{
 		draw_set_halign(fa_left);
