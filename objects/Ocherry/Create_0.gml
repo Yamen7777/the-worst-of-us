@@ -269,7 +269,7 @@ level_up = function() {
         player_level++;
         available_upgrade_points++;
         
-        // Show upgrade cards
+        // Show upgrade cards (will queue if already showing)
         if (instance_exists(Ogame)) {
             Ogame.show_upgrade_cards();
         }
@@ -280,6 +280,17 @@ level_up = function() {
         return true;
     }
     return false;
+}
+
+// Function to gain multiple levels at once
+gain_levels = function(_amount) {
+    var levels_gained = 0;
+    for (var i = 0; i < _amount; i++) {
+        if (level_up()) {
+            levels_gained++;
+        }
+    }
+    return levels_gained;
 }
 
 // Function to upgrade a specific stat
@@ -2221,8 +2232,14 @@ STATE_DEAD = function() {
     if (image_index >= 10) and (sprite_index == ScabeD) and (!death_transition_done) {
         death_transition_done = true;
         
-        // UNDO LAST UPGRADE (go back one level)
-        global.undo_last_upgrade();
+        // UNDO LAST UPGRADE (go back one level) - but only if under death limit
+        if (instance_exists(Ogame) && Ogame.deaths_this_room < Ogame.max_deaths_before_stop) {
+            global.undo_last_upgrade();
+            Ogame.deaths_this_room++;
+            show_debug_message("Death #" + string(Ogame.deaths_this_room) + " - Lost a level");
+        } else if (instance_exists(Ogame)) {
+            show_debug_message("Death limit reached (" + string(Ogame.max_deaths_before_stop) + ") - No more level loss this room");
+        }
         
         // Reset HP to full
         hp = 100;

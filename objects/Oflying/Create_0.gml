@@ -3,6 +3,9 @@ vsp = 10;
 hp = 3;
 face = 1;
 
+// LEVEL SYSTEM
+level_upgrade = 0; // Bonus levels this enemy gives when room is cleared
+
 follow = false;
 _x = xstart;
 radius = 300;

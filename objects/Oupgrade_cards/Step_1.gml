@@ -95,11 +95,26 @@ else if (card_state == "selected") {
     // Phase 4: Wait a moment then destroy and re-enable controls
     else if (animation_timer > 65) {
         show_debug_message("ANIMATION COMPLETE - CLEANING UP");
-    
+        
+        // Check for pending upgrades and set alarm BEFORE destroying
+        var should_queue_next = false;
+        if (instance_exists(Ogame) && Ogame.pending_upgrade_points > 0) {
+            should_queue_next = true;
+            Ogame.pending_upgrade_points--;
+            show_debug_message("Processing queued upgrade. Remaining: " + string(Ogame.pending_upgrade_points));
+        }
+        
+        // Clean up flags
         if (instance_exists(Ogame)) {
             Ogame.upgrade_cards_animating = false;
             Ogame.showing_upgrade_cards = false;
             Ogame.upgrade_cards_created = false;
+            
+            // Set alarm BEFORE destroying cards
+            if (should_queue_next) {
+                Ogame.alarm[1] = 10;
+                show_debug_message("ALARM 1 SET - Will show next upgrade in 10 frames");
+            }
         }
     
         // RE-ENABLE PLAYER CONTROLS AND MOVEMENT
@@ -108,8 +123,11 @@ else if (card_state == "selected") {
             Ocherry.Cpause = false;
             Ocherry.STATE = Ocherry.STATE_FREE;
         }
-    
-        instance_destroy();
+        
+        // Destroy all cards including this one
+        with (Oupgrade_cards) {
+            instance_destroy();
+        }
     }
 }
 else if (card_state == "disappearing") {

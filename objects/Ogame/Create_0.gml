@@ -1,5 +1,8 @@
 //Ogame create
 
+// Initialize random seed for different results each game
+randomize();
+
 //SAVEFILE
 #macro SAVEFILE_MAIN "player_progress.sav"
 
@@ -346,6 +349,10 @@ kill_counter_target_rotation = 0;
 kill_counter_jump_power = 0;
 room_start_kill_count = 0;
 
+// Death counter per room (resets when entering new room)
+deaths_this_room = 0;
+max_deaths_before_stop = 5;  // Stop losing levels after 5 deaths in same room
+
 // Upgrade card system
 showing_upgrade_cards = false;
 upgrade_cards_created = false;
@@ -353,6 +360,13 @@ upgrade_cards_animating = false;
 upgrades_confirmed = false;
 upgraded = false;
 all_cards_popped = false; //Track when all cards are ready
+extra_levels = 0;
+
+// Queue system for multiple level-ups
+pending_upgrade_points = 0; // Number of upgrade choices waiting to be shown
+
+// Track bonus levels from enemies killed in the room
+room_bonus_levels = 0; // Bonus levels to give when room is cleared
 
 // Make persistent so it doesn't get deactivated
 persistent = true;
@@ -360,6 +374,16 @@ object_set_persistent(object_index, true);
 
 show_upgrade_cards = function() {
     if (!instance_exists(Ocherry)) return;
+    
+    // Don't show cards in error room or main menu
+    if (room == Rerror || room == Rmain_menu) return;
+    
+    // If already showing cards, just increment pending counter and return
+    if (showing_upgrade_cards || upgrade_cards_created) {
+        pending_upgrade_points++;
+        show_debug_message("Upgrade cards already showing. Added to queue. Pending: " + string(pending_upgrade_points));
+        return;
+    }
     
     // Reset the flag
     all_cards_popped = false;
@@ -456,6 +480,14 @@ hide_upgrade_cards = function() {
     
     if (instance_exists(Ocherry)) {
         Ocherry.STATE = Ocherry.STATE_FREE;
+    }
+    
+    // Check if there are pending upgrades to show
+    if (pending_upgrade_points > 0) {
+        pending_upgrade_points--;
+        show_debug_message("Processing queued upgrade. Remaining: " + string(pending_upgrade_points));
+        // Small delay before showing next cards
+        alarm[1] = 10;
     }
 }
 

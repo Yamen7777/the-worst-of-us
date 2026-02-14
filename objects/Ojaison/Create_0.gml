@@ -1,6 +1,9 @@
 face = 1;
 flip = true;
 
+// LEVEL SYSTEM
+level_upgrade = 0; // Bonus levels this enemy gives when room is cleared
+
 side = "noone";
 //shuild
 instance_create_layer(x,y,"powerups",Oshuild);

@@ -12,7 +12,13 @@ for (var i = 0; i < array_length(damage_objects); i++) {
 				
                 hit = true;
 				
-                if (instance_exists(Owerewolf) && !Owerewolf.transform)
+                // Check if this is a fire-based attack (these DON'T give blood - they cost blood to use)
+                var obj_name = object_get_name(obj_type);
+                var is_fire_attack = (obj_name == "Ofireball" || obj_name == "OfireBreath" || 
+                                      obj_name == "OfireExplode" || obj_name == "OfireSlash" ||
+                                      obj_name == "Oblue_fire" || obj_name == "Oblue_explode");
+                
+                if (instance_exists(Owerewolf) && !Owerewolf.transform && !is_fire_attack)
                     ObloodPar.blood += damager.damage;
 				
                 hp -= damager.damage;

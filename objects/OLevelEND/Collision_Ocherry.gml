@@ -111,3 +111,6 @@ if (instance_exists(Ogame)) {
     // Save progress with confirmed upgrades
     global.save_progress();
 }
+
+// Reset death counter for this room
+Ogame.deaths_this_room = 0;

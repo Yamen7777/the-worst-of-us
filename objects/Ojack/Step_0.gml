@@ -201,10 +201,16 @@ for (var i = 0; i < array_length(damage_objects); i++) {
         var damager = instance_place(x, y, obj_type);
         
         if (damager != noone) {
+            // Check if this is a fire-based attack (these DON'T give blood - they cost blood to use)
+            var obj_name = object_get_name(obj_type);
+            var is_fire_attack = (obj_name == "Ofireball" || obj_name == "OfireBreath" || 
+                                  obj_name == "OfireExplode" || obj_name == "OfireSlash" ||
+                                  obj_name == "Oblue_fire" || obj_name == "Oblue_explode");
+            
             // SPECIAL CASE 1: OfireBreath - damage every frame, no invincibility
-            if (object_get_name(obj_type) == "OfireBreath") {
+            if (obj_name == "OfireBreath") {
                 hp -= damager.damage;
-                if (instance_exists(ObloodPar)) {
+                if (instance_exists(ObloodPar) && !is_fire_attack) {
                     ObloodPar.blood += damager.damage;
                 }
                 // Visual feedback but no stun
@@ -222,10 +228,10 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                 invincible_clear_timer = invincible_clear_time;
             }
             // SPECIAL CASE 2: Ospinning_thorns - damage but no stun/knockback
-            else if (object_get_name(obj_type) == "Ospinning_thorns") {
+            else if (obj_name == "Ospinning_thorns") {
                 if (ds_list_find_index(damaged_by_list, damager) == -1) {
                     hp -= damager.damage;
-                    if (instance_exists(ObloodPar)) {
+                    if (instance_exists(ObloodPar) && !is_fire_attack) {
                         ObloodPar.blood += damager.damage;
                     }
                     // Visual feedback only - red flash
@@ -245,7 +251,7 @@ for (var i = 0; i < array_length(damage_objects); i++) {
             else {
                 if (ds_list_find_index(damaged_by_list, damager) == -1) {
                     hp -= damager.damage;
-                    if (instance_exists(ObloodPar)) {
+                    if (instance_exists(ObloodPar) && !is_fire_attack) {
                         ObloodPar.blood += damager.damage;
                     }
                     hsp = sign(x - damager.x); // Knockback
@@ -286,5 +292,3 @@ if (attack_cooldown > 0) {
 if (keyboard_check_pressed(ord("J"))) {
     hp = 1000;
 }
-
-

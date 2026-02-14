@@ -30,5 +30,7 @@ if(instance_exists(OhealthPar))
 {
 	draw_set_font(Fm5x7XL);
 	draw_set_color(c_red);
+	draw_set_halign(fa_left);
+	draw_set_valign(fa_top);
 	draw_text(OhealthPar.x+35,OhealthPar.y-80,"LEVEL: " +string(Ocherry.player_level));
 }

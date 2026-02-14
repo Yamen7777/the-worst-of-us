@@ -23,7 +23,7 @@ attack_created = [false, false, false];
 max_enemy_level = 5;
 
 // Base stats (level 1)
-base_damage = 10;
+base_damage = 20;
 
 // Current stats (calculated from level)
 hp = base_hp;
@@ -120,3 +120,5 @@ gamer_tags = [
     "WildBlaze"
 ];
 gamer_tag = gamer_tags[irandom(array_length(gamer_tags) - 1)];
+
+danger_level = 20;

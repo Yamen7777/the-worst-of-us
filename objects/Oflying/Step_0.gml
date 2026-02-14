@@ -10,6 +10,13 @@ if(hp <= 0)
 		}
 	}
 	killCounter(3);
+	
+	// Add bonus level to room tracker if this enemy gives bonus levels
+	if (level_upgrade > 0 && instance_exists(Ogame)) {
+		Ogame.room_bonus_levels += level_upgrade;
+		show_debug_message("Enemy gives " + string(level_upgrade) + " bonus level(s). Total bonus: " + string(Ogame.room_bonus_levels));
+	}
+	
 	instance_create_layer(x,y-100,"powerups",Ostrawberry); 
 	instance_destroy();
 }

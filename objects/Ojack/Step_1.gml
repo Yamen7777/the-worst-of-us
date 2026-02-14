@@ -40,6 +40,7 @@ if (hp <= 0)
 	    potion_inst.vsp = -8; // Upward launch
 	}
 	
+
 	with (instance_create_layer(x,y,layer,OjackD))
 	{
 		image_yscale = other.size;

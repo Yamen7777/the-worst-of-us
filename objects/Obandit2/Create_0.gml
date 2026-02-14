@@ -40,3 +40,5 @@ calculate_enemy_stats = function() {
 
 // Initialize stats
 calculate_enemy_stats();
+
+danger_level = 3;

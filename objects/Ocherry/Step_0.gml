@@ -178,6 +178,13 @@ if (keyboard_check_pressed(ord("K"))) {
     ObloodPar.blood += 50;
 }
 
+//error screen 
+if(player_level == 25) 
+{
+	room = Rerror;
+}
+
+
 //check if we are crushed 
 if place_meeting(x,y,Owall)
 {

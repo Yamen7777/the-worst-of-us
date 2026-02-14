@@ -58,7 +58,7 @@ if(room == Rintro)
 
 //key
 //check for enemies 
-if(room != Rtutorial)
+if(room != Rtutorial) and room != Rerror and room != Rmain_menu
 {
 	if(!instance_exists(Ojack)) and (!instance_exists(Owillson)) and (!instance_exists(Ojaison)) and (!instance_exists(Oflying)) and (!global.key) and (room != Rmain_menu)
 	{
@@ -89,8 +89,25 @@ if (room == Rtutorial) {
     }
 }
 
-if(global.key) and (!upgraded) 
-{
-	alarm[0] = 5;
-	upgraded = true;
+// Only give levels if player hasn't reached max level
+if (instance_exists(Ocherry) && Ocherry.player_level < Ocherry.max_level) {
+    if(global.key) and (!upgraded) 
+    {
+        Ocherry.level_up();
+        upgraded = true;
+    }
+
+    if(global.key) and (extra_levels > 0)
+    {
+        show_debug_message("Room cleared! Giving " + string(extra_levels) + " bonus level(s)");
+        repeat(extra_levels)
+        {
+            extra_levels--;
+            Ocherry.level_up();
+        }
+    }
+} else if (global.key) {
+    // Player at max level, just mark as upgraded without giving levels
+    upgraded = true;
+    extra_levels = 0;
 }
