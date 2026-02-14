@@ -60,7 +60,12 @@ if (hitstun_time > 0)
 	} else {
 		image_blend = c_red; // Full red for unblocked damage
 	}
-	hitstun_time--;
+		hitstun_time--;
+}
+
+// Decrease block cooldown
+if (block_cooldown > 0) {
+	block_cooldown--;
 }
 else
 {
@@ -273,11 +278,16 @@ else if (!ground)
         }
     }
 }
-//charging hold attack (NOT released yet)
-else if (hold_time > 5 && !hold_attack) {
+//charging hold attack (charging OR fully charged and waiting for release)
+else if (hold_time > 5) {
     if(fire_mode) sprite_index = SFcabeAT2;
     else sprite_index = ScabeAT2;
-    image_index = 0; // Hold on first frame while charging
+    // If fully charged, stay on last frame, otherwise frame 0
+    if (hold_attack_charged) {
+        image_index = 0; // Last frame
+    } else {
+        image_index = 0; // First frame while charging
+    }
 }
 //attack 1 (includes released hold attack)
 else if (attack1) {

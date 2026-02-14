@@ -208,7 +208,10 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     ObloodPar.blood += damager.damage;
                 }
                 // Visual feedback but no stun
-                 hsp = sign(x - damager.x); // Knockback
+                hsp = sign(x - damager.x); // Knockback
+				 
+				// Show that same damage number above head
+				show_damage_number(x, y, damager.damage, -370);
                     
                 // Cancel attack when hit
                 attacking = false;
@@ -227,6 +230,9 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     }
                     // Visual feedback only - red flash
                     image_blend = c_red;
+					
+					// Show that same damage number above head
+					show_damage_number(x, y, damager.damage, -370);
                     
                     // Add to damaged list so it only hits once per thorn
                     ds_list_add(damaged_by_list, damager);
@@ -247,6 +253,9 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     // Cancel attack when hit
                     attacking = false;
                     attack_cooldown = attack_cooldown_time;
+					
+					// Show that same damage number above head
+					show_damage_number(x, y, damager.damage, -370);
                     
                     ds_list_add(damaged_by_list, damager);
                     invincible = true;

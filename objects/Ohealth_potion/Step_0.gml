@@ -60,7 +60,11 @@ if (can_collect && place_meeting(x, y, Ocherry)) {
     if (instance_exists(Ocherry)) {
         if (is_big) {
             // Big potion - restore to max health
+            var heal_amount = 100 - Ocherry.hp;
             Ocherry.hp = 100; // Set to max HP
+            
+            // Show heal number
+            show_damage_number(Ocherry.x, Ocherry.y, heal_amount, -310, "heal");
             
             // Visual feedback
             repeat(10) {
@@ -73,7 +77,11 @@ if (can_collect && place_meeting(x, y, Ocherry)) {
         } else {
             // Small potion - restore 25% of max health
             var heal_amount = 100 * 0.25; // 25% of max HP (100)
+            var actual_heal = min(heal_amount, 100 - Ocherry.hp);
             Ocherry.hp = min(Ocherry.hp + heal_amount, 100); // Don't exceed max
+            
+            // Show heal number
+            show_damage_number(Ocherry.x, Ocherry.y, actual_heal, -310, "heal");
             
             // Visual feedback
             repeat(5) {

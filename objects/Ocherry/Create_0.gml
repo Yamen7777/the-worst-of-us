@@ -12,6 +12,7 @@ trail_timer = 0;
 //health
 hp = 100;
 hitstun_time = 0; // frames of stun / invincibility after taking damage
+block_cooldown = 0; // frames of cooldown after blocking
 
 //moving
 face = 1;
@@ -106,6 +107,7 @@ combo_window_timer = 0;
 attack1_started = false;
 attack2_started = false;
 attack3_started = false;
+attack2_is_hold = false; // Track if attack2 came from hold attack
 attack_crouch_started = false;
 attack_air_started = false;
 attack1_duration = 20; // 4 frames at 12fps (4 * 60/12 = 20)
@@ -119,7 +121,8 @@ combo_window_start = 5; // Combo window opens after 5 frames
 //hold attack
 hold_attack = false;
 hold_time = 0;
-hold_max = 50; 
+hold_max = 50;
+hold_attack_charged = false; // true when fully charged and ready to release 
 
 
 // Blocking system
@@ -421,8 +424,8 @@ if (global.spawn_x == -1) {
 
 damage_taken = function(_damage, _source_x = undefined, _source_facing = undefined, _unblockable = false)
 {
-    // If we are currently in hitstun, ignore further damage
-    if (hitstun_time > 0) or (dashing) return;
+    // If we are currently in hitstun or block cooldown, ignore further damage
+    if (hitstun_time > 0) or (block_cooldown > 0) or (dashing) return;
     
     // Make sure damage is a valid number
     if (is_undefined(_damage)) _damage = 0;
@@ -532,6 +535,21 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
     hp -= _final_damage;
     if (hp < 0) hp = 0;
     
+    // Show damage numbers
+    if (_blocked_successfully && !_shield_broken) {
+        // Successfully blocked - show "BLOCK" text
+        show_damage_number(x, y, 0, -350, "block");
+        // Set block cooldown to prevent spam
+        block_cooldown = 30;
+        // Also show damage if any got through
+        if (_final_damage > 0) {
+            show_damage_number(x, y, floor(_final_damage), -310, "damage");
+        }
+    } else if (_final_damage > 0) {
+        // Normal damage (not blocked)
+        show_damage_number(x, y, floor(_final_damage), -310, "damage");
+    }
+    
     // Track if damage was blocked for visual effect
     damage_blocked = _blocked_successfully;
     
@@ -561,6 +579,8 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
         spell3_attacked = false;
         
         hold_time = 0;
+        hold_attack_charged = false;
+        attack2_is_hold = false; // Reset hold attack flag if interrupted
         
         // Knockback
         var _dir = 1;
@@ -1196,50 +1216,67 @@ STATE_FREE = function()
 	// IDLE - Can start attack 1
 	else if (!attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && attack_timer == 0 && cooldown_timer == 0 && !sliding_ground) {
     
-	    // Charging up (single powerful attack)
-	    if (HLMB) and (ground) and (!hold_attack) {
-	        hsp = 0;
-	        hold_time++;
+    // Charging up (single powerful attack)
+    if (HLMB) and (ground) {
+        hsp = 0;
         
-	        // DON'T lock image_index here - let it animate naturally
+        // If not fully charged yet, keep charging
+        if (!hold_attack_charged) {
+            hold_time++;
+            
+            // Charge time for one powerful attack
+            if (hold_time >= 40) { // Longer charge time (was 20)
+                hold_time = 40; // Cap at charge time
+                hold_attack_charged = true; // Fully charged, ready to release
+                hold_attack = true; // Mark that we have a charged attack ready
+                
+                // Create dust effect when fully charged
+                repeat(5) {
+                    with (instance_create_layer(x, y - 100, "bullets", Odust)) {
+                        hspeed = random_range(-3, 3);
+                        vspeed = random_range(-2, 0);
+                    }
+                }
+            }
+        }
+        // If fully charged and still holding, do nothing - wait for release
+    }
+    // Released the button - release powerful attack if charged
+	else if (hold_time > 0) {
+	    hsp = 0;
+    if (hold_attack_charged) {
+        // Start the attack animation properly
+        attack2 = true;
+        attack2_started = true;
+        attack2_is_hold = true; // Mark this as a hold attack
+        attack_timer = attack2_duration;
         
-	        // Charge time for one powerful attack
-	        if (hold_time >= 40) { // Longer charge time (was 20)
-	            hold_time = 40; // Cap at charge time
-	            hold_attack = true;
+	        if(face ==  1) var _bladeX =  130;
+	        if(face == -1) var _bladeX = -130;
+        
+	        // Create large slash
+	        if(!fire_mode) var _sprite = Sslash2;
+	        if( fire_mode) var _sprite = SslashFire2;
+	        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
+	        {
+	            damage = (5 + (other.upgrade_attack * 2)) * 2; // Changed from * 5 to * 2, then * 2 for double
+	            sprite_index = _sprite;
+	            image_xscale = other.face * 1.5; // 1.5x size
+	            image_yscale = 1.5; // 1.5x size
+	            image_angle += 125*other.face;
 	        }
-	    }
-	    // Released the button - release powerful attack if charged
-		else if (hold_time > 0) {
-		    hsp = 0;
-		    if (hold_attack) {
-		        // Start the attack animation properly
-		        attack2 = true;
-		        attack2_started = true;
-		        attack_timer = attack2_duration;
         
-		        if(face ==  1) var _bladeX =  130;
-		        if(face == -1) var _bladeX = -130;
+        // Play attack sound
+        audio_sound_pitch(SNsword,random_range(0.8, 0.9)); // Lower pitch for powerful attack
+        audio_play_sound(SNsword, 1, false);
         
-		        // Create large slash
-		        if(!fire_mode) var _sprite = Sslash2;
-		        if( fire_mode) var _sprite = SslashFire2;
-		        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
-		        {
-		            damage = (5 + (other.upgrade_attack * 2)) * 2; // Changed from * 5 to * 2, then * 2 for double
-		            sprite_index = _sprite;
-		            image_xscale = other.face * 1.5; // 1.5x size
-		            image_yscale = 1.5; // 1.5x size
-		            image_angle += 125*other.face;
-		        }
-        
-		        // Play attack sound
-		        audio_sound_pitch(SNsword,random_range(0.8, 0.9)); // Lower pitch for powerful attack
-		        audio_play_sound(SNsword, 1, false);
-		    }
-		    hold_time = 0;
-		    hold_attack = false;
-		}
+        // Start cooldown after hold attack
+        cooldown_timer = cooldown_duration;
+    }
+    hold_time = 0;
+    hold_attack = false;
+    hold_attack_charged = false;
+}
     
 	    //normal attack
 	    if (LMB) {
@@ -1294,14 +1331,15 @@ STATE_FREE = function()
 	if (attack1 && attack_timer == 0) {
 	    attack1 = false;
     
-	    if (queued_attack2) {
-	        // Start attack 2 immediately
-	        attack2 = true;
-	        attack2_started = true;
-	        attack_timer = attack2_duration;
-	        combo_window_timer = combo_window_start;
-	        queued_attack2 = false;
-	        //create attack 2 slash
+    if (queued_attack2) {
+        // Start attack 2 immediately
+        attack2 = true;
+        attack2_started = true;
+        attack2_is_hold = false; // Normal combo attack
+        attack_timer = attack2_duration;
+        combo_window_timer = combo_window_start;
+        queued_attack2 = false;
+        //create attack 2 slash
 			if(face ==  1) var _bladeX =  130;
 			if(face == -1) var _bladeX = -130;
 
@@ -1338,7 +1376,13 @@ STATE_FREE = function()
 	if (attack2 && attack_timer == 0) {
 	    attack2 = false;
     
-	    if (queued_attack3) {
+	    // If this was a hold attack, don't allow combo continuation
+	    if (attack2_is_hold) {
+	        attack2_is_hold = false;
+	        cooldown_timer = cooldown_duration; // Start cooldown
+	        queued_attack3 = false; // Clear any queued attack
+	    }
+	    else if (queued_attack3) {
 	        // Start attack 3 immediately
 	        attack3 = true;
 	        attack3_started = true;

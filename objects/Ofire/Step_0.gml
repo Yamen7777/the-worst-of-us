@@ -389,7 +389,8 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                 hsp = sign(x - damager.x);
                 
                 // UNSTOPPABLE: Never cancel attacks when hit - he takes damage but keeps attacking
-                
+                // Show that same damage number above head
+				show_damage_number(x, y, damager.damage, -420);
                 ds_list_add(damaged_by_list, damager);
                 invincible = true;
                 invincible_clear_timer = invincible_clear_time;
@@ -402,6 +403,8 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                         ObloodPar.blood += damager.damage;
                     }
                     image_blend = c_red;
+					// Show that same damage number above head
+					show_damage_number(x, y, damager.damage, -420);
                     
                     ds_list_add(damaged_by_list, damager);
                     invincible_clear_timer = invincible_clear_time;
@@ -415,6 +418,9 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                         ObloodPar.blood += damager.damage;
                     }
                     hsp = sign(x - damager.x);
+					
+					// Show that same damage number above head
+					show_damage_number(x, y, damager.damage, -420);
                     
                     // UNSTOPPABLE: Never cancel attacks when hit - he takes damage but keeps attacking
                     

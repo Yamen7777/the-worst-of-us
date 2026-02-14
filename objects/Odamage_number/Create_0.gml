@@ -1,0 +1,12 @@
+damage_value = 0;
+target_x = 0;
+target_y = 0;
+x_offset = random_range(-50, 50);
+y_offset = -80;
+move_speed = 1.5;
+alpha = 1.0;
+scale = 0.7;
+duration = 60;
+timer = 0;
+display_type = "damage";
+display_color = c_red;
