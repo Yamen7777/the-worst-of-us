@@ -67,3 +67,5 @@ if(!instance_exists(Ocherry)) and room != Rerror and room != Rmain_menu
 {
 	instance_create_layer(global.spawn_x,global.spawn_y,"player",Ocherry);
 }
+
+danger_calculated = false;

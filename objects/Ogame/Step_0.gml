@@ -111,3 +111,9 @@ if (instance_exists(Ocherry) && Ocherry.player_level < Ocherry.max_level) {
     upgraded = true;
     extra_levels = 0;
 }
+
+// Calculate danger level based on player level: 12 + (player_level * 5)
+if (instance_exists(Ocherry)) and (!danger_calculated) and (global.key) {
+    room_danger_level = 12 + (Ocherry.player_level * 5);
+	danger_calculated = true;
+}
