@@ -43,4 +43,9 @@ if(image_index == 2)
 	}
 }
 
+x += hsp;
+y += vsp;
 
+
+if(instance_exists(Ocherry)) hsp = Ocherry.hsp;
+if(instance_exists(Ocherry)) vsp = Ocherry.vsp;

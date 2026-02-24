@@ -39,7 +39,8 @@ enemy_types = [
     [Ojack, 3, 5],
     [Obandit2, 3, 5],
     [Obandit3, 4, 5],
-    [Ofire, 20, 5]
+    [Ofire, 20, 5],
+    [Owind, 20, 5]
 ];
 
 // Function to calculate danger cost at a specific level

@@ -167,7 +167,7 @@ if(sprite_index = ScabeD) and (!dead)
 
 	audio_play_sound(SNdeath,10,false);
 }
-/*
+
 // TEST: Press L to level up
 if (keyboard_check_pressed(ord("L"))) {
     level_up();
@@ -177,7 +177,7 @@ if (keyboard_check_pressed(ord("L"))) {
 if (keyboard_check_pressed(ord("K"))) {
     ObloodPar.blood += 50;
 }
-*/
+
 //error screen 
 if(player_level == 25) 
 {

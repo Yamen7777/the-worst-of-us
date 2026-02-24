@@ -110,6 +110,75 @@ attack3_started = false;
 attack2_is_hold = false; // Track if attack2 came from hold attack
 attack_crouch_started = false;
 attack_air_started = false;
+
+// Function to calculate forward speed based on enemy distance
+// _base_speed: the default speed when enemy is in range
+get_enemy_forward_speed = function(_base_speed) {
+    var _attack_range = 400;
+    var _nearest_enemy = noone;
+    var _nearest_dist = _attack_range;
+    var _extra_speed = _base_speed + 7; // Extra speed when enemy is far (base + 7)
+    
+    // Check all enemies
+    with (Ojack) {
+        var _dist = distance_to_object(other);
+        if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
+            _nearest_enemy = other;
+            _nearest_dist = _dist;
+        }
+    }
+    with (Obandit2) {
+        var _dist = distance_to_object(other);
+        if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
+            _nearest_enemy = other;
+            _nearest_dist = _dist;
+        }
+    }
+    with (Obandit3) {
+        var _dist = distance_to_object(other);
+        if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
+            _nearest_enemy = other;
+            _nearest_dist = _dist;
+        }
+    }
+    with (Ofire) {
+        var _dist = distance_to_object(other);
+        if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
+            _nearest_enemy = other;
+            _nearest_dist = _dist;
+        }
+    }
+    with (Owind) {
+        var _dist = distance_to_object(other);
+        if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
+            _nearest_enemy = other;
+            _nearest_dist = _dist;
+        }
+    }
+    
+    // Calculate speed based on distance
+    var _forward_speed = _base_speed;
+    if (_nearest_enemy != noone) {
+        // Enemy is in attack range (0-230): normal movement
+        if (_nearest_dist <= 230) {
+            _forward_speed = _base_speed;
+        }
+        // Enemy is between 230-300: extra forward to close gap
+        else if (_nearest_dist > 230 && _nearest_dist <= 260) {
+            _forward_speed = _extra_speed;
+        }
+        // Enemy is between 260-300: more extra forward
+        else if (_nearest_dist > 260 && _nearest_dist <= 300) {
+            _forward_speed = _extra_speed;
+        }
+        // Enemy is very far (300+): max forward
+        else if (_nearest_dist > 300) {
+            _forward_speed = _extra_speed;
+        }
+    }
+    
+    return _forward_speed;
+};
 attack1_duration = 20; // 4 frames at 12fps (4 * 60/12 = 20)
 attack2_duration = 20; // 4 frames at 12fps (4 * 60/12 = 20)
 attack3_duration = 25; // 5 frames at 12fps (5* 60/12 = 25)
@@ -767,10 +836,15 @@ STATE_FREE = function()
 	    audio_sound_pitch(SNstep4,1.3);
 	    audio_play_sound(choose(SNstep1,SNstep2,SNstep3,SNstep4),1,false);
 	}
-	// ATTACKING - Freeze during attacks
+	// ATTACKING - Freeze during attacks (but allow attack forward movement)
 	else if (attack) {
-	    hsp = 0;
+	    // Only stop vertical movement, not horizontal (allow attack dash)
 	    vsp = 0;
+	    
+	    // Allow facing direction change with arrow keys during attacks
+	    if (right) face = 1;
+	    if (left) face = -1;
+	    
 	    // Don't disable crouching during crouch attack
 	    if (!attack_crouch) {
 	        crouching = false;
@@ -1197,6 +1271,10 @@ STATE_FREE = function()
 	        // Play crouch attack sound
 	        audio_sound_pitch(SNsword, random_range(1, 1.2));
 	        audio_play_sound(SNsword, 1, false);
+	        
+	        // CROUCH ATTACK FORWARD MOVEMENT
+	        var _crouch_forward = get_enemy_forward_speed(3);
+	        hsp = face * _crouch_forward;
 	    }
 	}
 	// AIR ATTACK - Check second since it's also a special condition
@@ -1222,6 +1300,10 @@ STATE_FREE = function()
 	        // Play air attack sound
 	        audio_sound_pitch(SNsword, random_range(1, 1.2));
 	        audio_play_sound(SNsword, 1, false);
+	        
+	        // AIR ATTACK FORWARD MOVEMENT
+	        var _air_forward = get_enemy_forward_speed(5);
+	        hsp = face * _air_forward;
 	    }
 	}
 	// IDLE - Can start attack 1
@@ -1281,6 +1363,10 @@ STATE_FREE = function()
         audio_sound_pitch(SNsword,random_range(0.8, 0.9)); // Lower pitch for powerful attack
         audio_play_sound(SNsword, 1, false);
         
+        // HOLD ATTACK FORWARD MOVEMENT
+        var _hold_forward = get_enemy_forward_speed(8);
+        hsp = face * _hold_forward;
+        
         // Start cooldown after hold attack
         cooldown_timer = cooldown_duration;
     }
@@ -1312,6 +1398,77 @@ STATE_FREE = function()
 	        // Play attack 1 sound
 	        audio_sound_pitch(SNsword,random_range(1,1.2));
 	        audio_play_sound(SNsword, 1, false);
+	        
+	        // ATTACK FORWARD MOVEMENT - dash toward enemies
+	        // Find nearest enemy in front of player
+	        var _attack_range = 1000;  // TESTING: increased to 1000
+	        var _nearest_enemy = noone;
+	        var _nearest_dist = _attack_range;
+	        
+	        // Check all enemies
+	        with (Ojack) {
+	            var _dist = distance_to_object(other);
+	            if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
+	                _nearest_enemy = other;
+	                _nearest_dist = _dist;
+	            }
+	        }
+	        with (Obandit2) {
+	            var _dist = distance_to_object(other);
+	            if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
+	                _nearest_enemy = other;
+	                _nearest_dist = _dist;
+	            }
+	        }
+	        with (Obandit3) {
+	            var _dist = distance_to_object(other);
+	            if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
+	                _nearest_enemy = other;
+	                _nearest_dist = _dist;
+	            }
+	        }
+	        with (Ofire) {
+	            var _dist = distance_to_object(other);
+	            if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
+	                _nearest_enemy = other;
+	                _nearest_dist = _dist;
+	            }
+	        }
+	        with (Owind) {
+	            var _dist = distance_to_object(other);
+	            if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
+	                _nearest_enemy = other;
+	                _nearest_dist = _dist;
+	            }
+	        }
+	        
+	        // Apply forward movement based on enemy distance
+	        // Range is 0-230 for attack to hit
+	        var _forward_speed = 0;
+	        if (_nearest_enemy != noone) {
+	            // Enemy is in attack range (0-230): normal movement
+	            if (_nearest_dist <= 230) {
+	                _forward_speed = 3;
+	            }
+	            // Enemy is between 230-300: extra forward to close gap
+	            else if (_nearest_dist > 230 && _nearest_dist <= 260) {
+	                _forward_speed = 10;
+	            }
+	            // Enemy is between 260-300: more extra forward
+	            else if (_nearest_dist > 260 && _nearest_dist <= 300) {
+	                _forward_speed = 15;
+	            }
+	            // Enemy is very far (300+): max forward
+	            else if (_nearest_dist > 300) {
+	                _forward_speed = 10;
+	            }
+	        } else {
+	            // No enemy found: small forward momentum
+	            _forward_speed = 3;
+	        }
+	        
+	        // Apply forward movement in facing direction
+	        hsp = face * _forward_speed;
 	    }
 	}
 
@@ -1366,6 +1523,9 @@ STATE_FREE = function()
 	        // Play attack 2 sound
 	        audio_sound_pitch(SNsword,random_range(1,1.2));
 	        audio_play_sound(SNsword, 1, false);
+	        
+	        // ATTACK 2 FORWARD MOVEMENT
+	        hsp = face * 5;  // Fixed forward movement for attack 2
 	    } else {
 	        // Attack 1 ended without combo - start cooldown
 	        cooldown_timer = cooldown_duration;
@@ -1414,6 +1574,9 @@ STATE_FREE = function()
 	        // Play attack 3 sound
 	        audio_sound_pitch(SNsword,random_range(1,1.2));
 	        audio_play_sound(SNsword, 1, false);
+	        
+	        // ATTACK 3 FORWARD MOVEMENT
+	        hsp = face * 5;  // Fixed forward movement for attack 3
 	    } else {
 	        // Attack 2 ended without combo - start cooldown
 	        cooldown_timer = cooldown_duration;
