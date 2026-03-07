@@ -1,3 +1,4 @@
+/// @desc Function Description
 function input_setup()
 {
 	buffer_time = 5;
@@ -26,6 +27,9 @@ function general_input(){
 
 		// Dash - L1 (gp_shoulderlb)
 		dash = keyboard_check_pressed(vk_control) or gamepad_button_check_pressed(0,gp_shoulderlb);
+		
+		//blocking
+		block = keyboard_check(ord("f")) or keyboard_check(ord("F"))
 
 		// Attack - R2 (gp_shoulderr) - PRESSED
 		LMB = mouse_check_button_pressed(mb_left) or gamepad_button_check_pressed(0,gp_shoulderr);

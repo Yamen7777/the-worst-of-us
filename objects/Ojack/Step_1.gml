@@ -41,10 +41,15 @@ if (hp <= 0)
 	}
 	
 
-	with (instance_create_layer(x,y,layer,OjackD))
-	{
-		image_yscale = other.size;
-		image_xscale = other.image_xscale;
+	var _new_dead = instance_create_layer(x,y,layer,OjackD);
+	_new_dead.image_yscale = other.size;
+	_new_dead.image_xscale = other.image_xscale;
+	_new_dead.hsp = other.hsp;
+	_new_dead.vsp = other.vsp;
+	_new_dead.y -= 1;
+	if (abs(other.hsp) >= 3) {
+		_new_dead.push_state = true;
+		_new_dead.push_state_timer = _new_dead.push_state_time;
 	}
 	instance_destroy();
 }

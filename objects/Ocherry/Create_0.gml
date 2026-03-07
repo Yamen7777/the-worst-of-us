@@ -93,62 +93,261 @@ dashT = 180; //min 60 max 180
 dash_cooldown = dashT;
 
 //attacking
-attack = false; // Main attack flag for collision detection
+attack = false;
 attack1 = false;
 attack2 = false;
 attack3 = false;
 attack_crouch = false;
 attack_air = false;
-queued_attack2 = false;
-queued_attack3 = false;
+attack_heavy2 = false;
+attack_heavy3 = false;
 attack_timer = 0;
 cooldown_timer = 0;
 combo_window_timer = 0;
 attack1_started = false;
 attack2_started = false;
 attack3_started = false;
-attack2_is_hold = false; // Track if attack2 came from hold attack
+attack2_is_hold = false;
 attack_crouch_started = false;
 attack_air_started = false;
+attack_heavy2_started = false;
+attack_heavy3_started = false;
+
+light_attack_index = 0;
+heavy_attack_index = 0;
+heavy_attack_reset_timer = 0;
+heavy_attack_reset_time = 60;
+light_attack_reset_timer = 0;
+light_attack_reset_time = 60;
+
+queued_input = 0; // 0 = none, 1 = light, 2 = heavy
+
+attack_heavy2_duration = 30;
+attack_heavy3_duration = 35;
+
+crouch_attack = function() {
+    var _bladeX = face * 60;
+    var _sprite = fire_mode ? SslashFire1 : Sslash1;
+    
+    attack_timer = attack_crouch_duration;
+    
+    with(instance_create_layer(x + _bladeX, y - 80, "bullets", Oslash)) {
+        damage = 5 + (other.upgrade_attack * 2);
+        sprite_index = _sprite;
+        image_xscale = other.face;
+        image_yscale = -1;
+        heavy = false;
+    }
+    
+    audio_sound_pitch(SNsword, random_range(1, 1.2));
+    audio_play_sound(SNsword, 1, false);
+    
+    hsp = face * get_enemy_forward_speed(0, 3);
+    heavy_attack_reset_timer = heavy_attack_reset_time;
+    light_attack_reset_timer = light_attack_reset_time;
+};
+
+air_attack = function() {
+    var _bladeX = face * 100;
+    var _sprite = fire_mode ? SslashFire1 : Sslash1;
+    
+    attack_timer = attack_air_duration;
+    
+    with(instance_create_layer(x + _bladeX, y - 140, "bullets", Oslash)) {
+        damage = 5 + (other.upgrade_attack * 2);
+        sprite_index = _sprite;
+        image_xscale = other.face;
+        heavy = false;
+    }
+    
+    audio_sound_pitch(SNsword, random_range(1, 1.2));
+    audio_play_sound(SNsword, 1, false);
+    
+    hsp = face * get_enemy_forward_speed(1, 5);
+    heavy_attack_reset_timer = heavy_attack_reset_time;
+    light_attack_reset_timer = light_attack_reset_time;
+};
+
+hold_attack_release = function() {
+    var _bladeX = face * 130;
+    var _sprite = fire_mode ? SslashFire2 : Sslash2;
+    
+    attack_timer = attack2_duration;
+    attack2 = true;
+    attack2_started = true;
+    attack2_is_hold = true;
+    
+    with(instance_create_layer(x + _bladeX, y - 140, "bullets", Oslash)) {
+        damage = (5 + (other.upgrade_attack * 2)) * 2;
+        sprite_index = _sprite;
+        image_xscale = other.face * 1.5;
+        image_yscale = 1.5;
+        image_angle += 125 * other.face;
+        heavy = false;
+    }
+    
+    audio_sound_pitch(SNsword, random_range(0.8, 0.9));
+    audio_play_sound(SNsword, 1, false);
+    
+    hsp = face * get_enemy_forward_speed(2.5, 7);
+    cooldown_timer = cooldown_duration;
+    heavy_attack_reset_timer = heavy_attack_reset_time;
+    light_attack_reset_timer = light_attack_reset_time;
+};
+
+light_attack = function(_attack_num) {
+    var _bladeX = 0;
+    var _y_offset = 0;
+    var _slash_sprite = noone;
+    var _duration = 0;
+    var _forward_spd = 1;
+    
+    if (_attack_num == 1) {
+        _bladeX = face * 150;
+        _y_offset = -180;
+        _slash_sprite = fire_mode ? SslashFire1 : Sslash1;
+        _duration = attack1_duration;
+    } else if (_attack_num == 2) {
+        _bladeX = face * 130;
+        _y_offset = -140;
+        _slash_sprite = fire_mode ? SslashFire2 : Sslash2;
+        _duration = attack2_duration;
+    } else if (_attack_num == 3) {
+        _bladeX = face * 170;
+        _y_offset = -140;
+        _slash_sprite = fire_mode ? SslashFire3 : Sslash3;
+        _duration = attack3_duration;
+    }
+    
+    attack_timer = _duration;
+    
+    with (instance_create_layer(x + _bladeX, y + _y_offset, "bullets", Oslash)) {
+        damage = 5 + (other.upgrade_attack * 2);
+        sprite_index = _slash_sprite;
+        image_xscale = other.face;
+        if (_attack_num == 2) image_angle += 125 * other.face;
+        heavy = false;
+        light_variant = _attack_num;
+    }
+    
+    audio_sound_pitch(SNsword, random_range(1, 1.2));
+    audio_play_sound(SNsword, 1, false);
+    
+    // Only use dynamic speed for light attack 1, otherwise use fixed minimum
+    if (_attack_num == 1) {
+        hsp = face * get_enemy_forward_speed(_forward_spd, 5);
+    } else {
+        hsp = face * _forward_spd;
+    }
+};
+
+heavy_attack = function(_attack_num) {
+    var _bladeX = 0;
+    var _y_offset = 0;
+    var _slash_sprite = noone;
+    var _duration = 0;
+    var _forward_spd = 2;
+    
+    if (_attack_num == 1) {
+        _bladeX = face * 160;
+        _y_offset = -230;
+        _slash_sprite = Sslash2;
+        _duration = attack_heavy2_duration;
+    } else if (_attack_num == 2) {
+        _bladeX = face * 170;
+        _y_offset = -160;
+        _slash_sprite = Sslash3;
+        _duration = attack_heavy3_duration;
+    }
+    
+    attack_timer = _duration;
+    
+    with (instance_create_layer(x + _bladeX, y + _y_offset, "bullets", Oslash)) {
+        damage = (5 + (other.upgrade_attack * 2)) * 1.8;
+        sprite_index = _slash_sprite;
+        image_xscale = other.face * 1.5;
+		if (_attack_num == 1) 
+		{
+			image_angle += 25 * other.face;
+			image_yscale = 1.5;
+			clinch = true;
+		}
+		image_blend = c_blue;
+        heavy = true;
+        heavy_variant = _attack_num;
+    }
+    
+    audio_sound_pitch(SNsword, random_range(0.8, 1.0));
+    audio_play_sound(SNsword, 1, false);
+    
+    // Only use dynamic speed for heavy attack 1, otherwise use fixed minimum
+    if (_attack_num == 1) {
+        hsp = face * get_enemy_forward_speed(_forward_spd, 6);
+    } else {
+        hsp = face * _forward_spd;
+    }
+};
+
+start_light_attack = function(_num) {
+    var _attack_num = light_attack_index + 1;
+    
+    if (_attack_num == 1) {
+        attack1 = true;
+        attack1_started = true;
+        light_attack(1);
+    } else if (_attack_num == 2) {
+        attack2 = true;
+        attack2_started = true;
+        attack2_is_hold = false;
+        light_attack(2);
+    } else if (_attack_num == 3) {
+        attack3 = true;
+        attack3_started = true;
+        light_attack(3);
+    }
+    
+    light_attack_index++;
+    if (light_attack_index > 2) light_attack_index = 0;
+    heavy_attack_reset_timer = heavy_attack_reset_time;
+    light_attack_reset_timer = light_attack_reset_time;
+    light_attack_reset_timer = light_attack_reset_time;
+    
+    combo_window_timer = combo_window_start;
+};
+
+start_heavy_attack = function(_num) {
+    var _attack_num = heavy_attack_index + 1;
+    
+    if (_attack_num == 1) {
+        attack_heavy2 = true;
+        attack_heavy2_started = true;
+        heavy_attack(1);
+    } else if (_attack_num == 2) {
+        attack_heavy3 = true;
+        attack_heavy3_started = true;
+        heavy_attack(2);
+    }
+    
+    heavy_attack_index++;
+    if (heavy_attack_index > 1) heavy_attack_index = 0;
+    
+    light_attack_index = 0;
+    heavy_attack_reset_timer = heavy_attack_reset_time;
+    light_attack_reset_timer = light_attack_reset_time;
+    
+    combo_window_timer = combo_window_start;
+};
 
 // Function to calculate forward speed based on enemy distance
 // _base_speed: the default speed when enemy is in range
-get_enemy_forward_speed = function(_base_speed) {
+// _max_speed: the max speed when enemy is far
+get_enemy_forward_speed = function(_base_speed, _max_speed) {
     var _attack_range = 400;
     var _nearest_enemy = noone;
     var _nearest_dist = _attack_range;
-    var _extra_speed = _base_speed + 7; // Extra speed when enemy is far (base + 7)
     
-    // Check all enemies
+    // Check Ojack (parent object - includes all child enemies)
     with (Ojack) {
-        var _dist = distance_to_object(other);
-        if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
-            _nearest_enemy = other;
-            _nearest_dist = _dist;
-        }
-    }
-    with (Obandit2) {
-        var _dist = distance_to_object(other);
-        if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
-            _nearest_enemy = other;
-            _nearest_dist = _dist;
-        }
-    }
-    with (Obandit3) {
-        var _dist = distance_to_object(other);
-        if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
-            _nearest_enemy = other;
-            _nearest_dist = _dist;
-        }
-    }
-    with (Ofire) {
-        var _dist = distance_to_object(other);
-        if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
-            _nearest_enemy = other;
-            _nearest_dist = _dist;
-        }
-    }
-    with (Owind) {
         var _dist = distance_to_object(other);
         if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
             _nearest_enemy = other;
@@ -163,17 +362,13 @@ get_enemy_forward_speed = function(_base_speed) {
         if (_nearest_dist <= 230) {
             _forward_speed = _base_speed;
         }
-        // Enemy is between 230-300: extra forward to close gap
-        else if (_nearest_dist > 230 && _nearest_dist <= 260) {
-            _forward_speed = _extra_speed;
-        }
-        // Enemy is between 260-300: more extra forward
-        else if (_nearest_dist > 260 && _nearest_dist <= 300) {
-            _forward_speed = _extra_speed;
+        // Enemy is between 230-300: increase forward to close gap
+        else if (_nearest_dist > 230 && _nearest_dist <= 300) {
+            _forward_speed = _max_speed;
         }
         // Enemy is very far (300+): max forward
         else if (_nearest_dist > 300) {
-            _forward_speed = _extra_speed;
+            _forward_speed = _max_speed;
         }
     }
     
@@ -184,8 +379,8 @@ attack2_duration = 20; // 4 frames at 12fps (4 * 60/12 = 20)
 attack3_duration = 25; // 5 frames at 12fps (5* 60/12 = 25)
 attack_crouch_duration = 25; //5 frames at 12fps (5 * 60/12 = 25)
 attack_air_duration = 25; //5 frames at 12fps (5 * 60/12 = 25)
-cooldown_duration = 30; // Cooldown after combo ends
-combo_window_start = 5; // Combo window opens after 5 frames
+cooldown_duration = 2; // Cooldown after combo ends
+combo_window_start = 50; // Combo window opens after 50 frames
 
 //hold attack
 hold_attack = false;
@@ -1192,7 +1387,7 @@ STATE_FREE = function()
 	}
 	
 	// Blocking (can't block while in hitstun - prevents blocking when hit from behind)
-	if (HRMB && ground && !attack && !sliding_ground && hitstun_time == 0) {
+	if (block && ground && !attack && !sliding_ground && hitstun_time == 0) {
 	    blocking = true;
 	    hsp = 0; // Stop movement while blocking
 	} else if (!block_deflect) {
@@ -1238,72 +1433,49 @@ STATE_FREE = function()
 	}
 	if (combo_window_timer > 0) {
 	    combo_window_timer--;
+	    // Queue input during combo window
+	    if (queued_input == 0) {
+	        if (LMB) {
+	            queued_input = 1;
+	        } else if (RMB) {
+	            queued_input = 2;
+	        }
+	    }
+	}
+	if (heavy_attack_reset_timer > 0) {
+	    heavy_attack_reset_timer--;
+	    if (heavy_attack_reset_timer == 0) {
+	        heavy_attack_index = 0;
+	    }
+	}
+	if (light_attack_reset_timer > 0) {
+	    light_attack_reset_timer--;
+	    if (light_attack_reset_timer == 0) {
+	        light_attack_index = 0;
+	    }
 	}
 
 	// Update main attack flag
-	attack = (attack1 || attack2 || attack3 || attack_crouch || attack_air || attack_timer > 0);
+	attack = (attack1 || attack2 || attack3 || attack_crouch || attack_air || attack_heavy2 || attack_heavy3 || attack_timer > 0);
 
 	// COOLDOWN - Block all attacks
 	if (cooldown_timer > 0 || sliding_ground) {  // Added || sliding_ground
 	    // Can't attack during cooldown or slide
 	}
-	// CROUCH ATTACK - Check first since it's a special condition
-	else if (crouching && ground && !attack1 && !attack2 && !attack3 && !attack_air && attack_timer == 0 && !sliding_ground) {  // Added !sliding_ground
+	// CROUCH ATTACK
+	else if (crouching && ground && !attack1 && !attack2 && !attack3 && !attack_air && attack_timer == 0 && !sliding_ground) {
 	    if (LMB && !attack_crouch) {
 	        attack_crouch = true;
 	        attack_crouch_started = true;
-	        attack_timer = attack_crouch_duration;
-        
-	        // Create crouch attack slash
-			if(face ==  1) var _bladeX =  60;
-			if(face == -1) var _bladeX = -60;
-
-			if(!fire_mode) var _sprite = Sslash1;
-			if( fire_mode) var _sprite = SslashFire1;
-			with(instance_create_layer(Ocherry.x+_bladeX, Ocherry.y-80, "bullets", Oslash)) 
-			{
-			    damage = 5 + (other.upgrade_attack * 2);
-			    sprite_index = _sprite;
-			    image_xscale = other.face;
-			    image_yscale = -1;
-			}
-        
-	        // Play crouch attack sound
-	        audio_sound_pitch(SNsword, random_range(1, 1.2));
-	        audio_play_sound(SNsword, 1, false);
-	        
-	        // CROUCH ATTACK FORWARD MOVEMENT
-	        var _crouch_forward = get_enemy_forward_speed(3);
-	        hsp = face * _crouch_forward;
+	        crouch_attack();
 	    }
 	}
-	// AIR ATTACK - Check second since it's also a special condition
+	// AIR ATTACK
 	else if (!ground && !attack1 && !attack2 && !attack3 && !attack_crouch && attack_timer == 0) {
 	    if (LMB && !attack_air) {
 	        attack_air = true;
 	        attack_air_started = true;
-	        attack_timer = attack_air_duration;
-        
-	        // Create air attack slash
-			if(face ==  1) var _bladeX =  100;
-			if(face == -1) var _bladeX = -100;
-
-			if(!fire_mode) var _sprite = Sslash1;
-			if( fire_mode) var _sprite = SslashFire1;
-			with(instance_create_layer(Ocherry.x+_bladeX, Ocherry.y-140, "bullets", Oslash)) 
-			{
-			    damage = 5 + (other.upgrade_attack * 2);
-			    sprite_index = _sprite;
-			    image_xscale = other.face;
-			}
-        
-	        // Play air attack sound
-	        audio_sound_pitch(SNsword, random_range(1, 1.2));
-	        audio_play_sound(SNsword, 1, false);
-	        
-	        // AIR ATTACK FORWARD MOVEMENT
-	        var _air_forward = get_enemy_forward_speed(5);
-	        hsp = face * _air_forward;
+	        air_attack();
 	    }
 	}
 	// IDLE - Can start attack 1
@@ -1313,17 +1485,14 @@ STATE_FREE = function()
     if (HLMB) and (ground) {
         hsp = 0;
         
-        // If not fully charged yet, keep charging
         if (!hold_attack_charged) {
             hold_time++;
             
-            // Charge time for one powerful attack
-            if (hold_time >= 40) { // Longer charge time (was 20)
-                hold_time = 40; // Cap at charge time
-                hold_attack_charged = true; // Fully charged, ready to release
-                hold_attack = true; // Mark that we have a charged attack ready
+            if (hold_time >= 40) {
+                hold_time = 40;
+                hold_attack_charged = true;
+                hold_attack = true;
                 
-                // Create dust effect when fully charged
                 repeat(5) {
                     with (instance_create_layer(x, y - 100, "bullets", Odust)) {
                         hspeed = random_range(-3, 3);
@@ -1332,144 +1501,27 @@ STATE_FREE = function()
                 }
             }
         }
-        // If fully charged and still holding, do nothing - wait for release
     }
     // Released the button - release powerful attack if charged
-	else if (hold_time > 0) {
-	    hsp = 0;
-    if (hold_attack_charged) {
-        // Start the attack animation properly
-        attack2 = true;
-        attack2_started = true;
-        attack2_is_hold = true; // Mark this as a hold attack
-        attack_timer = attack2_duration;
-        
-	        if(face ==  1) var _bladeX =  130;
-	        if(face == -1) var _bladeX = -130;
-        
-	        // Create large slash
-	        if(!fire_mode) var _sprite = Sslash2;
-	        if( fire_mode) var _sprite = SslashFire2;
-	        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
-	        {
-	            damage = (5 + (other.upgrade_attack * 2)) * 2; // Changed from * 5 to * 2, then * 2 for double
-	            sprite_index = _sprite;
-	            image_xscale = other.face * 1.5; // 1.5x size
-	            image_yscale = 1.5; // 1.5x size
-	            image_angle += 125*other.face;
-	        }
-        
-        // Play attack sound
-        audio_sound_pitch(SNsword,random_range(0.8, 0.9)); // Lower pitch for powerful attack
-        audio_play_sound(SNsword, 1, false);
-        
-        // HOLD ATTACK FORWARD MOVEMENT
-        var _hold_forward = get_enemy_forward_speed(8);
-        hsp = face * _hold_forward;
-        
-        // Start cooldown after hold attack
-        cooldown_timer = cooldown_duration;
+    else if (hold_time > 0) {
+        hsp = 0;
+        if (hold_attack_charged) {
+            hold_attack_release();
+        }
+        hold_time = 0;
+        hold_attack = false;
+        hold_attack_charged = false;
     }
-    hold_time = 0;
-    hold_attack = false;
-    hold_attack_charged = false;
-}
     
-	    //normal attack
-	    if (LMB) {
-	        attack1 = true;
-	        attack1_started = true;
-	        attack_timer = attack1_duration;
-	        combo_window_timer = combo_window_start;
-	        queued_attack2 = false;
-	        queued_attack3 = false;
-	        //create attack 1 slash
-	        if(face ==  1) var _bladeX =  150;
-	        if(face == -1) var _bladeX = -150;
-        
-	        if(!fire_mode) var _sprite = Sslash1;
-	        if( fire_mode) var _sprite = SslashFire1;
-	        with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-180,"bullets",Oslash)) 
-	        {
-	            damage = 5 + (other.upgrade_attack * 2);
-	            sprite_index = _sprite;
-	            image_xscale = other.face;
-	        }
-	        // Play attack 1 sound
-	        audio_sound_pitch(SNsword,random_range(1,1.2));
-	        audio_play_sound(SNsword, 1, false);
-	        
-	        // ATTACK FORWARD MOVEMENT - dash toward enemies
-	        // Find nearest enemy in front of player
-	        var _attack_range = 1000;  // TESTING: increased to 1000
-	        var _nearest_enemy = noone;
-	        var _nearest_dist = _attack_range;
-	        
-	        // Check all enemies
-	        with (Ojack) {
-	            var _dist = distance_to_object(other);
-	            if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
-	                _nearest_enemy = other;
-	                _nearest_dist = _dist;
-	            }
-	        }
-	        with (Obandit2) {
-	            var _dist = distance_to_object(other);
-	            if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
-	                _nearest_enemy = other;
-	                _nearest_dist = _dist;
-	            }
-	        }
-	        with (Obandit3) {
-	            var _dist = distance_to_object(other);
-	            if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
-	                _nearest_enemy = other;
-	                _nearest_dist = _dist;
-	            }
-	        }
-	        with (Ofire) {
-	            var _dist = distance_to_object(other);
-	            if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
-	                _nearest_enemy = other;
-	                _nearest_dist = _dist;
-	            }
-	        }
-	        with (Owind) {
-	            var _dist = distance_to_object(other);
-	            if (_dist < _nearest_dist && sign(x - other.x) == other.face) {
-	                _nearest_enemy = other;
-	                _nearest_dist = _dist;
-	            }
-	        }
-	        
-	        // Apply forward movement based on enemy distance
-	        // Range is 0-230 for attack to hit
-	        var _forward_speed = 0;
-	        if (_nearest_enemy != noone) {
-	            // Enemy is in attack range (0-230): normal movement
-	            if (_nearest_dist <= 230) {
-	                _forward_speed = 3;
-	            }
-	            // Enemy is between 230-300: extra forward to close gap
-	            else if (_nearest_dist > 230 && _nearest_dist <= 260) {
-	                _forward_speed = 10;
-	            }
-	            // Enemy is between 260-300: more extra forward
-	            else if (_nearest_dist > 260 && _nearest_dist <= 300) {
-	                _forward_speed = 15;
-	            }
-	            // Enemy is very far (300+): max forward
-	            else if (_nearest_dist > 300) {
-	                _forward_speed = 10;
-	            }
-	        } else {
-	            // No enemy found: small forward momentum
-	            _forward_speed = 3;
-	        }
-	        
-	        // Apply forward movement in facing direction
-	        hsp = face * _forward_speed;
-	    }
+    // HEAVY ATTACK - using RMB
+    if (RMB && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && !attack_heavy2 && !attack_heavy3 && attack_timer == 0 && cooldown_timer == 0) {
+        start_heavy_attack(1);
+    }
+    
+    // LIGHT ATTACK - using LMB
+    if (LMB) {
+        start_light_attack(1);
+    }
 	}
 
 	// CROUCH ATTACK FINISHED
@@ -1484,117 +1536,72 @@ STATE_FREE = function()
 	    cooldown_timer = cooldown_duration; // Start cooldown
 	}
 
-	// ATTACK 1 ACTIVE
-	if (attack1 && attack_timer > 0) {
-	    // Combo window is open (after 5 frames have passed)
-	    if (combo_window_timer == 0) {
-	        // Player presses LMB during the combo window - queue attack 2
-	        if (LMB && !queued_attack2) {
-	            queued_attack2 = true;
-	        }
-	    }
-	}
-
 	// ATTACK 1 FINISHED
 	if (attack1 && attack_timer == 0) {
 	    attack1 = false;
-    
-    if (queued_attack2) {
-        // Start attack 2 immediately
-        attack2 = true;
-        attack2_started = true;
-        attack2_is_hold = false; // Normal combo attack
-        attack_timer = attack2_duration;
-        combo_window_timer = combo_window_start;
-        queued_attack2 = false;
-        //create attack 2 slash
-			if(face ==  1) var _bladeX =  130;
-			if(face == -1) var _bladeX = -130;
-
-			if(!fire_mode) var _sprite = Sslash2;
-			if( fire_mode) var _sprite = SslashFire2;
-			with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
-			{
-			    damage = 5 + (other.upgrade_attack * 2);
-			    sprite_index = _sprite;
-			    image_xscale = other.face;
-			    image_angle += 125*other.face;
-			}
-	        // Play attack 2 sound
-	        audio_sound_pitch(SNsword,random_range(1,1.2));
-	        audio_play_sound(SNsword, 1, false);
-	        
-	        // ATTACK 2 FORWARD MOVEMENT
-	        hsp = face * 5;  // Fixed forward movement for attack 2
+	    if (queued_input == 1) {
+	        start_light_attack(1);
+	    } else if (queued_input == 2) {
+	        start_heavy_attack(1);
 	    } else {
-	        // Attack 1 ended without combo - start cooldown
 	        cooldown_timer = cooldown_duration;
 	    }
-	}
-
-	// ATTACK 2 ACTIVE
-	if (attack2 && attack_timer > 0) {
-	    // Combo window is open (after 5 frames have passed)
-	    if (combo_window_timer == 0) {
-	        // Player presses LMB during the combo window - queue attack 3
-	        if (LMB && !queued_attack3) {
-	            queued_attack3 = true;
-	        }
-	    }
+	    queued_input = 0;
 	}
 
 	// ATTACK 2 FINISHED
 	if (attack2 && attack_timer == 0) {
 	    attack2 = false;
-    
-	    // If this was a hold attack, don't allow combo continuation
-	    if (attack2_is_hold) {
-	        attack2_is_hold = false;
-	        cooldown_timer = cooldown_duration; // Start cooldown
-	        queued_attack3 = false; // Clear any queued attack
-	    }
-	    else if (queued_attack3) {
-	        // Start attack 3 immediately
-	        attack3 = true;
-	        attack3_started = true;
-	        attack_timer = attack3_duration;
-	        queued_attack3 = false;
-	        //create attack 3 slash
-			if(face ==  1) var _bladeX =  170;
-			if(face == -1) var _bladeX = -170;
-
-			if(!fire_mode) var _sprite = Sslash3;
-			if( fire_mode) var _sprite = SslashFire3;
-			with(instance_create_layer(Ocherry.x+_bladeX,Ocherry.y-140,"bullets",Oslash)) 
-			{
-			    damage = 5 + (other.upgrade_attack * 2);
-			    sprite_index = _sprite;
-			    image_xscale = other.face;
-			}
-	        // Play attack 3 sound
-	        audio_sound_pitch(SNsword,random_range(1,1.2));
-	        audio_play_sound(SNsword, 1, false);
-	        
-	        // ATTACK 3 FORWARD MOVEMENT
-	        hsp = face * 5;  // Fixed forward movement for attack 3
+	    if (queued_input == 1) {
+	        start_light_attack(1);
+	    } else if (queued_input == 2) {
+	        start_heavy_attack(1);
 	    } else {
-	        // Attack 2 ended without combo - start cooldown
 	        cooldown_timer = cooldown_duration;
 	    }
-	}
-
-	// ATTACK 3 ACTIVE
-	if (attack3 && attack_timer > 0) {
-	    // Attack 3 is playing
+	    queued_input = 0;
 	}
 
 	// ATTACK 3 FINISHED
 	if (attack3 && attack_timer == 0) {
 	    attack3 = false;
-	    cooldown_timer = cooldown_duration; // Start 30 frame cooldown
+	    if (queued_input == 1) {
+	        start_light_attack(1);
+	    } else if (queued_input == 2) {
+	        start_heavy_attack(1);
+	    } else {
+	        cooldown_timer = cooldown_duration;
+	    }
+	    queued_input = 0;
+	}
+	
+	// HEAVY ATTACK 1 (attack_heavy2) FINISHED
+	if (attack_heavy2 && attack_timer == 0) {
+	    attack_heavy2 = false;
+	    if (queued_input == 1) {
+	        start_light_attack(1);
+	    } else if (queued_input == 2) {
+	        start_heavy_attack(1);
+	    } else {
+	        cooldown_timer = cooldown_duration;
+	    }
+	    queued_input = 0;
+	}
+	
+	// HEAVY ATTACK 2 (attack_heavy3) FINISHED
+	if (attack_heavy3 && attack_timer == 0) {
+	    attack_heavy3 = false;
+	    if (queued_input == 1) {
+	        start_light_attack(1);
+	    } else if (queued_input == 2) {
+	        start_heavy_attack(1);
+	    } else {
+	        cooldown_timer = cooldown_duration;
+	    }
+	    queued_input = 0;
 	}
 
-	// SPELL SYSTEM
+ 	// SPELL SYSTEM
 	// Decrease spell timers
 	if (spell1_timer > 0) spell1_timer--;
 	if (spell2_timer > 0) spell2_timer--;
@@ -1605,7 +1612,7 @@ STATE_FREE = function()
 	if (spell3_cooldown > 0) spell3_cooldown--;
 
 	// Update attack flag to include spells
-	attack = (attack1 || attack2 || attack3 || attack_crouch || attack_air || spell1_active || spell2_active || spell3_active || attack_timer > 0);
+	attack = (attack1 || attack2 || attack3 || attack_crouch || attack_air || attack_heavy2 || attack_heavy3 || spell1_active || spell2_active || spell3_active || attack_timer > 0);
 
 	// SPELL 1 - Q (Costs 50 blood) - UNLOCKED AT LEVEL 1
 	if (spell1 && !spell1_active && !spell2_active && !spell3_active && spell1_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 1) {

@@ -178,6 +178,11 @@ if (keyboard_check_pressed(ord("K"))) {
     ObloodPar.blood += 50;
 }
 
+// TEST: Press J to increase enemy health 
+if (keyboard_check_pressed(ord("J"))) and (instance_exists(Ojack)) {
+    Ojack.hp = 1000;
+}
+
 //error screen 
 if(player_level == 25) 
 {
@@ -321,6 +326,22 @@ else if (attack3) {
     if (attack3_started) {
         image_index = 0;
         attack3_started = false;
+    }
+}
+//heavy attack 1 (now attack_heavy2)
+else if (attack_heavy2) {
+    sprite_index = ScabeHAT2;
+    if (attack_heavy2_started) {
+        image_index = 0;
+        attack_heavy2_started = false;
+    }
+}
+//heavy attack 2 (now attack_heavy3)
+else if (attack_heavy3) {
+    sprite_index = ScabeHAT3;
+    if (attack_heavy3_started) {
+        image_index = 0;
+        attack_heavy3_started = false;
     }
 }
 //crouch attack 
