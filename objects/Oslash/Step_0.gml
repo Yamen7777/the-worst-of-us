@@ -1,5 +1,17 @@
-if(image_index == 2) 
-{
+// Hitstop: freeze on current frame and stop movement
+if (hitstop_timer > 0) {
+    hitstop_timer--;
+    image_index = hitstop_frame; // Stay on the frame where hitstop started
+    // Don't update hsp/vsp from player during hitstop
+} else {
+    hitstop_frame = image_index; // Store current frame for next hitstop
+    
+    // Update movement from player when not in hitstop
+    if(instance_exists(Ocherry)) hsp = Ocherry.hsp;
+    if(instance_exists(Ocherry)) vsp = Ocherry.vsp;
+    
+    if(image_index == 2) 
+    {
 	//fire mode
 	if(Ocherry.fire_range) var _sprite = Sspinning_fire;
 	else var _sprite = Sspinning_blade;
@@ -41,11 +53,8 @@ if(image_index == 2)
 			}
 		}
 	}
+	}
 }
-
+ 
 x += hsp;
 y += vsp;
-
-
-if(instance_exists(Ocherry)) hsp = Ocherry.hsp;
-if(instance_exists(Ocherry)) vsp = Ocherry.vsp;

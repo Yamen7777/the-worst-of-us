@@ -1,26 +1,3 @@
-//kill counter 
-// Handle hitstop countdown
-if (hitstop_timer > 0) {
-    hitstop_timer--;
-    
-    // When freeze is over, restore normal room speed and play end sounds
-    if (hitstop_timer <= 0) {
-        room_speed = normal_room_speed;
-        
-        // Debug - show what pitch values we're using
-        show_debug_message("SNkill pitch: " + string(hitstop_kill_pitch));
-        show_debug_message("SNscore pitch: " + string(hitstop_score_pitch));
-        
-        // Try using audio_play_sound instead with audio_sound_pitch
-        var snd_kill = audio_play_sound(SNkill, 10, false);
-        audio_sound_pitch(snd_kill, hitstop_kill_pitch);
-        
-        var snd_score = audio_play_sound(SNscore, 10, false);
-        audio_sound_pitch(snd_score, hitstop_score_pitch);
-    }
-}
-
-
 // Animate kill counter scale
 kill_counter_scale = lerp(kill_counter_scale, kill_counter_target_scale, 0.2);
 

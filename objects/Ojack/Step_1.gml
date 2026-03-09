@@ -7,7 +7,6 @@ if (hp <= 0)
 			image_blend = c_red;
 		}
 	}
-	killCounter(2);
 	audio_stop_sound(SNzobmie);
 	
 	// HEALTH POTION DROP SYSTEM
@@ -39,8 +38,6 @@ if (hp <= 0)
 	    potion_inst.hsp = random_range(-5, 5);
 	    potion_inst.vsp = -8; // Upward launch
 	}
-	
-
 	var _new_dead = instance_create_layer(x,y,layer,OjackD);
 	_new_dead.image_yscale = other.size;
 	_new_dead.image_xscale = other.image_xscale;

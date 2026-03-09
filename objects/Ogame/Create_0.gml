@@ -336,12 +336,7 @@ to_destroy = noone;
 
 //kill counter
 global.kill_counter = 0;
-
-hitstop_timer = 0;
-normal_room_speed = 60;
-hitstop_kill_pitch = 1.0;
-hitstop_score_pitch = 1.0;
-
+ 
 kill_counter_scale = 1;
 kill_counter_target_scale = 1;
 kill_counter_rotation = 0;

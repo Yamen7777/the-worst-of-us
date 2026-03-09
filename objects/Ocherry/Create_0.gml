@@ -21,6 +21,8 @@ walkSP[0] = 20;
 walkSP[1] = 35;
 hsp = 0;
 vsp = 0;
+hitstop_timer = 0;
+hitstop_frame = 0;
 crouching = false;
 hasControl = true;
 Cpause = false;
@@ -122,8 +124,8 @@ light_attack_reset_time = 60;
 
 queued_input = 0; // 0 = none, 1 = light, 2 = heavy
 
-attack_heavy2_duration = 30;
-attack_heavy3_duration = 35;
+attack_heavy2_duration = 28; // 6 frames at 13fps
+attack_heavy3_duration = 32; // 7 frames at 13fps
 
 crouch_attack = function() {
     var _bladeX = face * 60;
@@ -374,13 +376,13 @@ get_enemy_forward_speed = function(_base_speed, _max_speed) {
     
     return _forward_speed;
 };
-attack1_duration = 20; // 4 frames at 12fps (4 * 60/12 = 20)
-attack2_duration = 20; // 4 frames at 12fps (4 * 60/12 = 20)
-attack3_duration = 25; // 5 frames at 12fps (5* 60/12 = 25)
-attack_crouch_duration = 25; //5 frames at 12fps (5 * 60/12 = 25)
-attack_air_duration = 25; //5 frames at 12fps (5 * 60/12 = 25)
+attack1_duration = 18; // 4 frames at 13fps
+attack2_duration = 18; // 4 frames at 13fps
+attack3_duration = 23; // 5 frames at 13fps
+attack_crouch_duration = 23; // 5 frames at 13fps
+attack_air_duration = 23; // 5 frames at 13fps
 cooldown_duration = 2; // Cooldown after combo ends
-combo_window_start = 50; // Combo window opens after 50 frames
+combo_window_start = 35; // Combo window scaled for 13fps
 
 //hold attack
 hold_attack = false;
@@ -916,6 +918,14 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
 //states 
 STATE_FREE = function()
 {	
+    // Hitstop: skip movement but keep timers running
+    if (hitstop_timer > 0) {
+        hitstop_timer--;
+        image_index = hitstop_frame; // Stay on the frame where hitstop started
+    } else {
+        hitstop_frame = image_index; // Store current frame for next hitstop
+    }
+    
     // --- Update wall_id every frame ---
     var wall_left = instance_place(x-20, y, Owall);
     var wall_right = instance_place(x+20, y, Owall);
@@ -1424,8 +1434,8 @@ STATE_FREE = function()
 	else fire_defence = false;
 	
 	//attacking
-	// Decrease timers
-	if (attack_timer > 0) {
+	// Decrease timers (only when not in hitstop)
+	if (attack_timer > 0 && hitstop_timer <= 0) {
 	    attack_timer--;
 	}
 	if (cooldown_timer > 0) {

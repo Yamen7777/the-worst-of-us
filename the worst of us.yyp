@@ -226,6 +226,7 @@
     {"id":{"name":"tile_test2","path":"rooms/tile_test2/tile_test2.yy",},},
     {"id":{"name":"DrawText","path":"scripts/DrawText/DrawText.yy",},},
     {"id":{"name":"general_input","path":"scripts/general_input/general_input.yy",},},
+    {"id":{"name":"HitStop","path":"scripts/HitStop/HitStop.yy",},},
     {"id":{"name":"KillCounter","path":"scripts/KillCounter/KillCounter.yy",},},
     {"id":{"name":"screenShake","path":"scripts/screenShake/screenShake.yy",},},
     {"id":{"name":"show_damage_number","path":"scripts/show_damage_number/show_damage_number.yy",},},
