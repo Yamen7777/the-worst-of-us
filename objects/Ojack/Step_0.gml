@@ -1,18 +1,7 @@
 //Ojack step
- // Hitstop: skip movement and freeze on current frame
-if (hitstop_timer > 0) {
-    hitstop_timer--;
-    image_index = hitstop_frame; // Stay on the frame where hitstop started
-    // Keep applying gravity but don't move horizontally
-    vsp = vsp + grv;
-    if (place_meeting(x, y + vsp, wall)) {
-        vsp = 0;
-    }
-    return; // Skip all behavior
-}
-hitstop_frame = image_index; // Store current frame for next hitstop
-
- vsp = vsp + grv;
+ vsp = vsp + (grv * global.delta_time_scale);
+ vsp *= global.delta_time_scale;
+ image_speed = 1 * global.delta_time_scale;
 
 //afraid of height (AFH)
 if (AFH) && (grounded) && (!place_meeting(x+hsp,y+1,wall))
@@ -48,7 +37,7 @@ if (place_meeting(x+hsp,y,wall))
 	}
 }
 
-x += hsp;
+x += hsp * global.delta_time_scale;
 
 //vertica collision  
 if (place_meeting(x,y+vsp,wall))
@@ -59,7 +48,7 @@ if (place_meeting(x,y+vsp,wall))
 	}
 	vsp = 0;
 }
-y = y + vsp;
+y += vsp;
 
 //get out if stuck
 if(place_meeting(x,y,wall)) y -= 3;
@@ -361,7 +350,7 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                 ds_list_add(damaged_by_list, damager);
                 invincible = true;
                 invincible_clear_timer = invincible_clear_timer;
-				HitStop(2, 2, damager.x, damager.y); // Short hitstop for fire breath
+				HitStop(2);
             }
             // SPECIAL CASE 2: Ospinning_thorns - damage but no stun/knockback
             else if (obj_name == "Ospinning_thorns") {
@@ -379,7 +368,7 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     // Add to damaged list so it only hits once per thorn
                     ds_list_add(damaged_by_list, damager);
                     invincible_clear_timer = invincible_clear_time;
-					HitStop(1, 2, damager.x, damager.y); // Very short hitstop for thorns
+					HitStop(1);
                     
                     // NO invincibility, NO knockback, NO sprite change, NO attack cancel
                 }
@@ -437,12 +426,12 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     }
                     
                     // Apply hitstop - freeze both player and enemy
-                    var _hitstop_duration = 5;
+                    var _hitstop_duration = 3;
                     if (variable_instance_exists(damager, "heavy") && damager.heavy == true) {
                         // Heavy attack - longer hitstop
-                        _hitstop_duration = 7;
+                        _hitstop_duration = 4;
                     }
-                    HitStop(_hitstop_duration, 2, damager.x, damager.y); // 2 = freeze both player and enemy
+                    HitStop(_hitstop_duration);
 					
 					// Show that same damage number above head
 					show_damage_number(x, y, damager.damage, -370);
@@ -450,7 +439,6 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     ds_list_add(damaged_by_list, damager);
                     invincible = true;
                     invincible_clear_timer = invincible_clear_time;
-					hit_stop = true;
                 }
             }
         }

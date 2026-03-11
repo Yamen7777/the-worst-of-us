@@ -62,7 +62,7 @@
     },
     "name":"Sslash3",
     "playback":1,
-    "playbackSpeed":12.0,
+    "playbackSpeed":14.0,
     "playbackSpeedType":0,
     "resourceType":"GMSequence",
     "resourceVersion":"2.0",

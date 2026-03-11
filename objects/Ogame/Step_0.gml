@@ -1,3 +1,11 @@
+// Handle hitstop timer
+if (global.hitstop_timer > 0) {
+    global.hitstop_timer--;
+    if (global.hitstop_timer <= 0) {
+        global.delta_time_scale = 1;
+    }
+}
+
 // Animate kill counter scale
 kill_counter_scale = lerp(kill_counter_scale, kill_counter_target_scale, 0.2);
 

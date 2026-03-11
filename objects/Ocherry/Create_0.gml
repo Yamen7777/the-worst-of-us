@@ -21,8 +21,6 @@ walkSP[0] = 20;
 walkSP[1] = 35;
 hsp = 0;
 vsp = 0;
-hitstop_timer = 0;
-hitstop_frame = 0;
 crouching = false;
 hasControl = true;
 Cpause = false;
@@ -918,13 +916,8 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
 //states 
 STATE_FREE = function()
 {	
-    // Hitstop: skip movement but keep timers running
-    if (hitstop_timer > 0) {
-        hitstop_timer--;
-        image_index = hitstop_frame; // Stay on the frame where hitstop started
-    } else {
-        hitstop_frame = image_index; // Store current frame for next hitstop
-    }
+    // Apply delta time scale for hitstop
+    image_speed = 1 * global.delta_time_scale;
     
     // --- Update wall_id every frame ---
     var wall_left = instance_place(x-20, y, Owall);
@@ -1434,9 +1427,9 @@ STATE_FREE = function()
 	else fire_defence = false;
 	
 	//attacking
-	// Decrease timers (only when not in hitstop)
-	if (attack_timer > 0 && hitstop_timer <= 0) {
-	    attack_timer--;
+	// Decrease timers (affected by global delta_time_scale for hitstop)
+	if (attack_timer > 0) {
+	    attack_timer -= global.delta_time_scale;
 	}
 	if (cooldown_timer > 0) {
 	    cooldown_timer--;
@@ -1890,7 +1883,7 @@ STATE_FREE = function()
 	}
 
 	//move
-	x += hsp;
+	x += hsp * global.delta_time_scale;
 
 	//vertical collision
 	//up collisions
@@ -2007,7 +2000,7 @@ STATE_FREE = function()
 		forgetssp = noone;
 	}
 	//move
-	if !place_meeting(x,y + vsp,Owall) { y += vsp;}
+	if !place_meeting(x,y + vsp,Owall) { y += vsp * global.delta_time_scale;}
 
 	//final moving platform collision and movment 
 	//X - MoveingPlatXspd and collison
@@ -2172,7 +2165,7 @@ STATE_DASH = function()
 	}
 
 	//move
-	x += hsp;
+	x += hsp * global.delta_time_scale;
 
 	//vertical collision
 	//up collisions
@@ -2289,7 +2282,7 @@ STATE_DASH = function()
 		forgetssp = noone;
 	}
 	//move
-	if !place_meeting(x,y + vsp,Owall) { y += vsp;}
+	if !place_meeting(x,y + vsp,Owall) { y += vsp * global.delta_time_scale;}
 
 	//final moving platform collision and movment 
 	//X - MoveingPlatXspd and collison

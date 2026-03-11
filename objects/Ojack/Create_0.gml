@@ -2,8 +2,6 @@ face = 1;
 flip = true;
 hit = false;
 wall = [Owall, Ossplat];
-hitstop_timer = 0;
-hitstop_frame = 0;
 //invincible
 damaged_by_list = ds_list_create();
 invincible_clear_timer = 0;

@@ -1,17 +1,10 @@
-// Hitstop: freeze on current frame and stop movement
-if (hitstop_timer > 0) {
-    hitstop_timer--;
-    image_index = hitstop_frame; // Stay on the frame where hitstop started
-    // Don't update hsp/vsp from player during hitstop
-} else {
-    hitstop_frame = image_index; // Store current frame for next hitstop
-    
-    // Update movement from player when not in hitstop
-    if(instance_exists(Ocherry)) hsp = Ocherry.hsp;
-    if(instance_exists(Ocherry)) vsp = Ocherry.vsp;
-    
-    if(image_index == 2) 
-    {
+// Update movement from player
+if(instance_exists(Ocherry)) hsp = Ocherry.hsp * global.delta_time_scale;
+if(instance_exists(Ocherry)) vsp = Ocherry.vsp * global.delta_time_scale;
+image_speed = 1 * global.delta_time_scale;
+
+if(image_index == 2) 
+{
 	//fire mode
 	if(Ocherry.fire_range) var _sprite = Sspinning_fire;
 	else var _sprite = Sspinning_blade;
@@ -52,7 +45,6 @@ if (hitstop_timer > 0) {
 				max_distance = 400 * Ocherry.upgrade_range; // 400, 800, 1200, 1600, 2000
 			}
 		}
-	}
 	}
 }
  

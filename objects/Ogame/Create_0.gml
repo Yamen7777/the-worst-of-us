@@ -336,6 +336,8 @@ to_destroy = noone;
 
 //kill counter
 global.kill_counter = 0;
+global.delta_time_scale = 1;
+global.hitstop_timer = 0;
  
 kill_counter_scale = 1;
 kill_counter_target_scale = 1;
