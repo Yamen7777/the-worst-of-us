@@ -213,6 +213,11 @@ else if (hitstun_time > 0 && !block_deflect)
 {
     sprite_index = ScabeHT;
 }
+//dodging
+else if(STATE = STATE_DODGE)
+{
+    sprite_index = Scabej2;
+}
 //block deflect (successful block animation)
 else if (block_deflect) {
     if(fire_defence) sprite_index = SFcabeBD;

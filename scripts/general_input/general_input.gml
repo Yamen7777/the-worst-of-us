@@ -29,8 +29,8 @@ function general_input(){
 		dash = keyboard_check_pressed(vk_control) or gamepad_button_check_pressed(0,gp_shoulderlb);
 		
 		//blocking
-		block = keyboard_check(ord("f")) or keyboard_check(ord("F"))
-
+		dodge = keyboard_check(ord("f")) or keyboard_check(ord("F"))
+		block = 0;
 		// Attack - R2 (gp_shoulderr) - PRESSED
 		LMB = mouse_check_button_pressed(mb_left) or gamepad_button_check_pressed(0,gp_shoulderr);
 
