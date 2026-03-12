@@ -95,12 +95,12 @@ dash_cooldown = dashT;
 //dodge
 dodging = false;
 canDodge = false;
-dodgeDistance = 200;
-dodgeTime = 10;
+dodgeDistance = 250;
+dodgeTime = 20;
 dodgeDirection = 0;
 dodgeEnergy = 0;
 dodged = false;
-dodgeT = 45
+dodgeT = 45;
 dodge_cooldown = dodgeT;
 
 //attacking

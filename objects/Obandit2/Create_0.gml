@@ -9,12 +9,19 @@ invincible_clear_time = 60;
 invincible = false;
 invincible_time = 20;
 invincible_timer = invincible_time;
+hit_stun_timer = 10;
+hit_stun = hit_stun_timer;
+clinched = false;
+clinched_timer = 0;
+push_state = false;
+push_state_timer = 0;
+push_state_time = 60;
 // List of all damaging objects
 damage_objects = [Ospinning_blade, Oslash, Ofireball, OfireBreath, OfireExplode, Ospinning_thorns, OfireSlash];
 // Attack system
 attacking = false;
 attack_cooldown = 0;
-attack_cooldown_time = 70;
+attack_cooldown_time = 80;
 attack_range = 1900; // Attack range
 stop_distance = 1800; //Stop moving when this close
 attack_created = [false, false];
@@ -40,5 +47,6 @@ calculate_enemy_stats = function() {
 
 // Initialize stats
 calculate_enemy_stats();
+extra_level_added = false;
 
 danger_level = 3;

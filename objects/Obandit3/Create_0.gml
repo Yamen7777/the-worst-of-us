@@ -9,19 +9,26 @@ invincible_clear_time = 60;
 invincible = false;
 invincible_time = 20;
 invincible_timer = invincible_time;
+hit_stun_timer = 10;
+hit_stun = hit_stun_timer;
+clinched = false;
+clinched_timer = 0;
+push_state = false;
+push_state_timer = 0;
+push_state_time = 60;
 // List of all damaging objects
 damage_objects = [Ospinning_blade, Oslash, Ofireball, OfireBreath, OfireExplode, Ospinning_thorns, OfireSlash];
 // Attack system
 attacking = false;
 attack_cooldown = 0;
-attack_cooldown_time = 40;
-attack_range = 250; // Attack range
-stop_distance = 200; //Stop moving when this close
+attack_cooldown_time = 90;
+attack_range = 500; // Attack range
+stop_distance = 250; //Stop moving when this close
 attack_created = [false];
 //shoot
 shooting = false;
-shoot_range = 900; // Attack range
-shoot_stop_distance = 800; //Stop moving when this close
+shoot_range = 1800; // Attack range
+shoot_stop_distance = 1700; //Stop moving when this close
 shoot_created = [false];
 
 // LEVEL SYSTEM

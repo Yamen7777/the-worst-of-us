@@ -7,7 +7,6 @@ if (hp <= 0)
 			image_blend = c_red;
 		}
 	}
-	killCounter(2);
 	audio_stop_sound(SNzobmie);
 	
 	// HEALTH POTION DROP SYSTEM
@@ -39,11 +38,15 @@ if (hp <= 0)
 	    potion_inst.hsp = random_range(-5, 5);
 	    potion_inst.vsp = -8; // Upward launch
 	}
-	
-	with (instance_create_layer(x,y,layer,Obandit2D))
-	{
-		image_yscale = other.size;
-		image_xscale = other.image_xscale;
+	var _new_dead = instance_create_layer(x,y,layer,Obandit2D);
+	_new_dead.image_yscale = other.size;
+	_new_dead.image_xscale = other.image_xscale;
+	_new_dead.hsp = other.hsp;
+	_new_dead.vsp = other.vsp;
+	_new_dead.y -= 1;
+	if (abs(other.hsp) >= 3) {
+		_new_dead.push_state = true;
+		_new_dead.push_state_timer = _new_dead.push_state_time;
 	}
 	instance_destroy();
 }

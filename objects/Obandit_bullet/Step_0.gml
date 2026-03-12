@@ -17,7 +17,7 @@ if(sprite_index == Sbandit_bullet)
 	    // Check if we hit a dodging player
 	    var hit_dodging = false;
 	    with (Ocherry) {
-	        if (place_meeting(x, y, other) && variable_instance_exists(id, "dodge_invincible") && dodge_invincible) {
+	        if (place_meeting(x, y, other) && dodging) {
 	            hit_dodging = true;
 	        }
 	    }

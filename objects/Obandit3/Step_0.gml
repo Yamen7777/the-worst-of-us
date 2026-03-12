@@ -1,5 +1,7 @@
-//bandit 3 step 
-vsp = vsp + grv;
+//Ojack step
+ vsp = vsp + (grv * global.delta_time_scale);
+ vsp *= global.delta_time_scale;
+ image_speed = 1 * global.delta_time_scale;
 
 //afraid of height (AFH)
 if (AFH) && (grounded) && (!place_meeting(x+hsp,y+1,wall))
@@ -7,11 +9,12 @@ if (AFH) && (grounded) && (!place_meeting(x+hsp,y+1,wall))
 	if(flip)
 	{
 		hsp = -hsp;
-		face = sign(hsp);
+		face = sign(hsp); // Add this line - make face flip when hitting wall
 	}
 	else
 	{
-		hsp = -sign(hsp) * 20;
+		// Small knockback when chasing player and hitting wall
+		hsp = -sign(hsp) * 20; // Knockback speed (adjust as needed)
 	}
 }
 
@@ -29,13 +32,14 @@ if (place_meeting(x+hsp,y,wall))
 	}
 	else
 	{
-		hsp = -sign(hsp) * 20;
+		// Small knockback when chasing player and hitting wall
+		hsp = -sign(hsp) * 20; // Knockback speed (adjust as needed)
 	}
 }
 
-x += hsp;
+x += hsp * global.delta_time_scale;
 
-//vertical collision  
+//vertica collision  
 if (place_meeting(x,y+vsp,wall))
 {
 	while (!place_meeting(x,y+sign(vsp),wall))
@@ -44,7 +48,7 @@ if (place_meeting(x,y+vsp,wall))
 	}
 	vsp = 0;
 }
-y = y + vsp;
+y += vsp;
 
 //get out if stuck
 if(place_meeting(x,y,wall)) y -= 3;
@@ -99,7 +103,7 @@ if (!attacking && !shooting && attack_cooldown == 0) {
 // MELEE ATTACK animation
 if (attacking) {
 	hsp = 0;
-    
+    if(image_index == 0) with instance_create_layer(x,y-135,"bullets",Odanger_flash) sprite_index = Sflash_orange;
     // First attack - at frame 2
     if (image_index >= 2 && !attack_created[0]) {
         attack_created[0] = true;
@@ -142,7 +146,7 @@ else if (shooting) {
             damage = other.current_damage; // Use calculated damage
             image_xscale = 0.75*other.face;
             image_yscale = 0.75;
-			max_distance = 1000;
+			max_distance = 2000;
         }
     }
     
@@ -175,14 +179,19 @@ if (!place_meeting(x, y + 1, wall)) {
             sprite_index = Sbandit3W;
         }
     }
+    
+    // Make sure shooting animation plays
+    if (shooting) {
+        image_speed = 1;
+    }
 }
 
 // Sprite direction
-if (hsp != 0 && !attacking && !shooting) image_xscale = face * size;
+if (hsp != 0 && !attacking) image_xscale = face * size;
 image_yscale = size;
 
-// Damage visual effect
-if (invincible) {
+// Damage visual effect - handle AFTER animation logic
+if (invincible) and (!attacking) {
     invincible_timer--;
     image_alpha = 0.9;
     sprite_index = Sbandit3H;
@@ -197,15 +206,134 @@ if (invincible) {
     }
 } else {
     image_alpha = 1;
+    // Only reset to white if not being damaged by fire/thorns
     if (image_blend == c_red) {
+        // Fade red back to white quickly
         image_blend = merge_color(image_blend, c_white, 0.3);
     } else {
         image_blend = c_white;
     }
 }
 
+// Push state handling
+if (push_state) {
+    // Count down timer
+    push_state_timer--;
+    if (push_state_timer <= 0) {
+        push_state = false;
+    }
+    
+    // Check for horizontal wall collision
+    if (hsp != 0) {
+        var _wall_check = noone;
+        if (hsp > 0) {
+            _wall_check = instance_place(x + abs(hsp) + 5, y, wall);
+        } else {
+            _wall_check = instance_place(x - abs(hsp) - 5, y, wall);
+        }
+        
+        if (_wall_check != noone) {
+            // Hit a wall - calculate damage based on hsp
+            var _impact_speed = abs(hsp);
+            var _damage = 0;
+            
+            if (_impact_speed >= 3) {
+                // Scale damage from 1 to 10 based on speed (3 to 50+)
+                _damage = floor(lerp(1, 10, clamp((_impact_speed - 3) / 47, 0, 1)));
+            }
+            
+            if (_damage > 0) {
+                hp -= _damage;
+                show_damage_number(x, y, -_damage, -370);
+            }
+            
+            // Stop horizontal movement
+            hsp = 0;
+            
+            // End push state early
+            push_state = false;
+            image_blend = c_white;
+        }
+        
+        // Check for collision with other Ojack enemies
+        var _other_enemy = noone;
+        if (hsp > 0) {
+            _other_enemy = instance_place(x + abs(hsp) + 10, y, Ojack);
+        } else {
+            _other_enemy = instance_place(x - abs(hsp) - 10, y, Ojack);
+        }
+        
+        if (_other_enemy != noone && _other_enemy != id) {
+            // Hit another Ojack - calculate damage (half each)
+            var _impact_speed = abs(hsp);
+            var _damage = 0;
+            
+            if (_impact_speed >= 3) {
+                // Scale damage from 1 to 10 based on speed (3 to 50+)
+                _damage = floor(lerp(1, 10, clamp((_impact_speed - 3) / 47, 0, 1)));
+            }
+            
+            var _half_damage = ceil(_damage / 2);
+            
+            // This enemy takes half damage
+            if (_half_damage > 0) {
+                hp -= _half_damage;
+                show_damage_number(x, y, -_half_damage, -370);
+            }
+            
+            // Other enemy takes half damage
+            if (_half_damage > 0) {
+                _other_enemy.hp -= _half_damage;
+                with (_other_enemy) {
+                    show_damage_number(x, y, -_half_damage, -370);
+                }
+            }
+            
+            // Give other enemy a small knockback (10 at 50+ hsp, 1 at 3 hsp)
+            var _other_knockback = 0;
+            if (_impact_speed >= 3) {
+                // Scale knockback from 1 to 25 based on speed (3 to 50+)
+                _other_knockback = floor(lerp(2, 35, clamp((_impact_speed - 3) / 47, 0, 1)));
+            }
+            _other_enemy.hsp = sign(hsp) * _other_knockback;
+            
+            // Give other enemy push state
+            if (abs(_other_knockback) >= 1) {
+                _other_enemy.push_state = true;
+                _other_enemy.push_state_timer = _other_enemy.push_state_time;
+            }
+            
+            // Stop horizontal movement
+            hsp = 0;
+            
+            // End push state early
+            push_state = false;
+            image_blend = c_white;
+        }
+    }
+} else {
+    image_blend = c_white;
+}
+
 // Circle detection and follow Ocherry
-if (instance_exists(Ocherry) && !invincible){
+if (clinched) {
+    // Clinch movement - pull towards slash position
+    if (clinch_timer > 0) {
+        clinch_timer--;
+        // Find the slash that clinched us
+        var _slash = instance_find(Oslash, 0);
+        if (_slash != noone && variable_instance_exists(_slash, "clinch") && _slash.clinch) {
+            // Pull enemy to slash position minus offset
+            var _targetX = _slash.x - (sign(_slash.image_xscale));
+            x = lerp(x, _targetX, 0.1);
+            hsp = 0;
+            // Face the direction of the pull
+            face = sign(_slash.image_xscale);
+        }
+    } else {
+        clinched = false;
+    }
+} else if (instance_exists(Ocherry) && !invincible) and (!attacking) {
     var _cherry = Ocherry;
     var _detectionRadius = 2500;
     var _distance = point_distance(x, y, _cherry.x, _cherry.y);
@@ -215,6 +343,8 @@ if (instance_exists(Ocherry) && !invincible){
     
     // Check if Ocherry is within detection range
     if (_distance <= _detectionRadius) {
+        //audio_sound_pitch(SNzobmie, 0.8);
+        //if (!audio_is_playing(SNzobmie) && hp > 0) audio_play_sound(SNzobmie, 3, true);
         flip = false;
         
         // Calculate horizontal distance to Ocherry
@@ -222,64 +352,27 @@ if (instance_exists(Ocherry) && !invincible){
         var _horizontal_distance = abs(_dx);
         var _cherryDirection = sign(_dx);
         
-        // Always face Ocherry (when not attacking/shooting)
-        if (_cherryDirection != 0 && !attacking && !shooting) {
+        // Always face Ocherry
+        if (_cherryDirection != 0) {
             face = _cherryDirection;
         }
         
-        // UPDATED MOVEMENT LOGIC
-        // Priority 1: If in melee range, stop at stop_distance (200)
-        if (_distance <= attack_range) {
-            if (_horizontal_distance > stop_distance) {
-                // Move towards player (to get in melee position)
-                if (_cherryDirection == -1) {
-                    hsp = lerp(hsp, -_maxspd, _accel);
-                } else if (_cherryDirection == 1) {
-                    hsp = lerp(hsp, _maxspd, _accel);
-                }
-            } else {
-                // Close enough for melee - stop
-                hsp = 0;
-                if (!attacking && !shooting) face = sign(Ocherry.x - x);
-            }
-        }
-        // Priority 2: If between 350-900 (shooting range), stop at shoot_stop_distance (800)
-        else if (_distance > 350 && _distance <= shoot_range) {
-            if (_horizontal_distance > shoot_stop_distance) {
-                // Move towards player (to get in shooting position)
-                if (_cherryDirection == -1) {
-                    hsp = lerp(hsp, -_maxspd, _accel);
-                } else if (_cherryDirection == 1) {
-                    hsp = lerp(hsp, _maxspd, _accel);
-                }
-            } else {
-                // Good shooting distance - stop
-                hsp = 0;
-                if (!attacking && !shooting) face = sign(Ocherry.x - x);
-            }
-        }
-        // Priority 3: If between attack_range and 350 (transition zone) - chase to get closer for melee
-        else if (_distance > attack_range && _distance <= 350) {
-            // In transition zone - move towards player
+        // Movement logic - stop at stop_distance (150), but can still attack from attack_range (250)
+        if (_horizontal_distance > stop_distance) {
+            // Too far - move towards Ocherry
             if (_cherryDirection == -1) {
                 hsp = lerp(hsp, -_maxspd, _accel);
             } else if (_cherryDirection == 1) {
                 hsp = lerp(hsp, _maxspd, _accel);
             }
-        }
-        // Priority 4: Too far - chase
-        else {
-            if (_cherryDirection == -1) {
-                hsp = lerp(hsp, -_maxspd, _accel);
-            } else if (_cherryDirection == 1) {
-                hsp = lerp(hsp, _maxspd, _accel);
-            }
+        } else {
+            // Within stop distance - stop moving (but can still attack if within 250)
+            hsp = lerp(hsp, 0, 0.2);
         }
     } else {
         flip = true;
         // Outside detection range - stop
         hsp = lerp(hsp, 0, 0.1);
-        if (!attacking && !shooting) face = sign(Ocherry.x - x);
     }
 }
 
@@ -303,16 +396,23 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                 if (instance_exists(ObloodPar) && !is_fire_attack) {
                     ObloodPar.blood += damager.damage;
                 }
-                hsp = sign(x - damager.x);
+                // Visual feedback but no stun
+                hsp = Ocherry.face * 5; // Knockback
+				 
+				// Show that same damage number above head
+				show_damage_number(x, y, damager.damage, -370);
                     
-                // Cancel BOTH attacks when hit
-                attacking = false;
-                shooting = false;
-                attack_cooldown = attack_cooldown_time;
+                // Cancel attack only if it was a heavy attack OR if shooting
+                if (shooting || (variable_instance_exists(damager, "heavy") && damager.heavy == true)) {
+                    attacking = false;
+                    shooting = false;
+                    attack_cooldown = attack_cooldown_time;
+                }
                     
                 ds_list_add(damaged_by_list, damager);
                 invincible = true;
-                invincible_clear_timer = invincible_clear_time;
+                invincible_clear_timer = invincible_clear_timer;
+				HitStop(2);
             }
             // SPECIAL CASE 2: Ospinning_thorns - damage but no stun/knockback
             else if (obj_name == "Ospinning_thorns") {
@@ -321,10 +421,18 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     if (instance_exists(ObloodPar) && !is_fire_attack) {
                         ObloodPar.blood += damager.damage;
                     }
+                    // Visual feedback only - red flash
                     image_blend = c_red;
+					
+					// Show that same damage number above head
+					show_damage_number(x, y, damager.damage, -370);
                     
+                    // Add to damaged list so it only hits once per thorn
                     ds_list_add(damaged_by_list, damager);
                     invincible_clear_timer = invincible_clear_time;
+					HitStop(1);
+                    
+                    // NO invincibility, NO knockback, NO sprite change, NO attack cancel
                 }
             }
             // NORMAL CASE: All other damage sources
@@ -334,12 +442,65 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     if (instance_exists(ObloodPar) && !is_fire_attack) {
                         ObloodPar.blood += damager.damage;
                     }
-                    hsp = sign(x - damager.x);
                     
-                    // Cancel BOTH attacks when hit
-                    attacking = false;
-                    shooting = false;
-                    attack_cooldown = attack_cooldown_time;
+                    // Cancel attack for ranged attacks only, not melee
+                    if (shooting) {
+                        // Only cancel if shooting (ranged attack)
+                        shooting = false;
+                        shoot_created = [false];
+                        attack_cooldown = attack_cooldown_time;
+                    }
+                    
+                    // Check variant for different knockback
+                    if (variable_instance_exists(damager, "heavy") && damager.heavy == true) {
+                        // Heavy attacks
+                        if (variable_instance_exists(damager, "heavy_variant")) {
+                            if (damager.heavy_variant == 1) {
+                                // Heavy 1: small forward knockback
+                                hsp = 0;
+                            } else if (damager.heavy_variant == 2) {
+                                // Heavy 2: double knockback (push further)
+                                hsp = Ocherry.face * 30;
+                            } else {
+                                hsp = Ocherry.face * 1;
+                            }
+                        } else {
+                            hsp = Ocherry.face * 1;
+                        }
+                    } else if (variable_instance_exists(damager, "light_variant")) {
+                        // Check light variant for knockback
+                        if (damager.light_variant == 3) {
+                            // Light 3: knockback of 50
+                            hsp = Ocherry.face * 10;
+                        } else {
+                            hsp = Ocherry.face * 1;
+                        }
+                    } else {
+                        hsp = Ocherry.face * 1;
+                    }
+                    
+                    // Apply clinch if this is a clinch attack
+                    if (variable_instance_exists(damager, "clinch") && damager.clinch == true) {
+                        clinched = true;
+                        clinch_timer = 30;
+                    }
+                    
+                    // Apply push state if there's knockback
+                    if (abs(hsp) >= 1) {
+                        push_state = true;
+                        push_state_timer = push_state_time;
+                    }
+                    
+                    // Apply hitstop - freeze both player and enemy
+                    var _hitstop_duration = 3;
+                    if (variable_instance_exists(damager, "heavy") && damager.heavy == true) {
+                        // Heavy attack - longer hitstop
+                        _hitstop_duration = 4;
+                    }
+                    HitStop(_hitstop_duration);
+					
+					// Show that same damage number above head
+					show_damage_number(x, y, damager.damage, -370);
                     
                     ds_list_add(damaged_by_list, damager);
                     invincible = true;
@@ -360,3 +521,15 @@ if (invincible_clear_timer > 0) {
         ds_list_clear(damaged_by_list);
     }
 }
+
+//hit stun
+if(hit_stun > 0)
+{
+	hit_stun--;
+}
+
+// Attack cooldown
+if (attack_cooldown > 0) {
+    attack_cooldown--;
+}
+
