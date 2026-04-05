@@ -133,8 +133,8 @@ light_attack_reset_time = 60;
 
 queued_input = 0; // 0 = none, 1 = light, 2 = heavy
 
-attack_heavy2_duration = 28; // 6 frames at 13fps
-attack_heavy3_duration = 32; // 7 frames at 13fps
+attack_heavy2_duration = 24; // 8 frames at 20fps
+attack_heavy3_duration = 27; // 9 frames at 20fps
 
 crouch_attack = function() {
     var _bladeX = face * 60;
@@ -385,13 +385,13 @@ get_enemy_forward_speed = function(_base_speed, _max_speed) {
     
     return _forward_speed;
 };
-attack1_duration = 18; // 4 frames at 13fps
-attack2_duration = 18; // 4 frames at 13fps
-attack3_duration = 23; // 5 frames at 13fps
-attack_crouch_duration = 23; // 5 frames at 13fps
-attack_air_duration = 23; // 5 frames at 13fps
+attack1_duration = 18; // 6 frames at 20fps
+attack2_duration = 21; // 7 frames at 20fps
+attack3_duration = 27; // 9 frames at 20fps
+attack_crouch_duration = 22; // 5 frames at 15fps + 2
+attack_air_duration = 22; // 5 frames at 15fps + 2
 cooldown_duration = 2; // Cooldown after combo ends
-combo_window_start = 35; // Combo window scaled for 13fps
+combo_window_start = 24; // Combo window scaled for 15fps
 
 //hold attack
 hold_attack = false;
@@ -1302,6 +1302,18 @@ STATE_FREE = function()
 	// Check if dash is unlocked (speed level >= 1) and has enough blood
 	if (dodge and canDodge) 
 	{
+	    // Cancel any ongoing attack
+	    attack1 = false;
+	    attack2 = false;
+	    attack3 = false;
+	    attack_crouch = false;
+	    attack_air = false;
+	    attack_heavy2 = false;
+	    attack_heavy3 = false;
+	    attack_timer = 0;
+	    combo_window_timer = 0;
+	    queued_input = 0;
+	    
 	    screenShake(25,8);
 	    dodging = true;
 	    vsp = -2;

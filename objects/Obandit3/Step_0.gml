@@ -72,7 +72,7 @@ if (shooting && instance_exists(Ocherry)) {
 
 // COMBINED ATTACK/SHOOT LOGIC - Check distance and decide which attack to use
 if (!attacking && !shooting && attack_cooldown == 0) {
-    if (instance_exists(Ocherry)) {
+        if (instance_exists(Ocherry)) {
         var _distance = point_distance(x, y, Ocherry.x, Ocherry.y);
         
         // PRIORITY 1: Close range - Melee attack
@@ -103,7 +103,7 @@ if (!attacking && !shooting && attack_cooldown == 0) {
 // MELEE ATTACK animation
 if (attacking) {
 	hsp = 0;
-    if(image_index == 0) with instance_create_layer(x,y-135,"bullets",Odanger_flash) sprite_index = Sflash_orange;
+    if(image_index == 0) with instance_create_layer(x,y-300,"effects",Odanger_flash) sprite_index = Sflash_orange;
     // First attack - at frame 2
     if (image_index >= 2 && !attack_created[0]) {
         attack_created[0] = true;
@@ -120,7 +120,7 @@ if (attacking) {
     // Check if animation finished
     if (image_index >= image_number - 1) {
         attacking = false;
-        attack_cooldown = attack_cooldown_time;
+        attack_cooldown = attack_cooldown_timer;
     }
 }
 // SHOOT animation
@@ -153,7 +153,7 @@ else if (shooting) {
     // Check if animation finished
     if (image_index >= image_number - 1) {
         shooting = false;
-        attack_cooldown = attack_cooldown_time;
+        attack_cooldown = attack_cooldown_timer;
     }
 }
 
@@ -406,7 +406,7 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                 if (shooting || (variable_instance_exists(damager, "heavy") && damager.heavy == true)) {
                     attacking = false;
                     shooting = false;
-                    attack_cooldown = attack_cooldown_time;
+                    attack_cooldown = attack_cooldown_timer;
                 }
                     
                 ds_list_add(damaged_by_list, damager);
@@ -448,7 +448,7 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                         // Only cancel if shooting (ranged attack)
                         shooting = false;
                         shoot_created = [false];
-                        attack_cooldown = attack_cooldown_time;
+                        attack_cooldown = attack_cooldown_timer;
                     }
                     
                     // Check variant for different knockback
@@ -492,10 +492,10 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     }
                     
                     // Apply hitstop - freeze both player and enemy
-                    var _hitstop_duration = 3;
+                    var _hitstop_duration = 9;
                     if (variable_instance_exists(damager, "heavy") && damager.heavy == true) {
                         // Heavy attack - longer hitstop
-                        _hitstop_duration = 4;
+                        _hitstop_duration = 11;
                     }
                     HitStop(_hitstop_duration);
 					

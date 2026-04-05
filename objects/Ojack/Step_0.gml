@@ -426,10 +426,10 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     }
                     
                     // Apply hitstop - freeze both player and enemy
-                    var _hitstop_duration = 3;
+                    var _hitstop_duration = 9;
                     if (variable_instance_exists(damager, "heavy") && damager.heavy == true) {
                         // Heavy attack - longer hitstop
-                        _hitstop_duration = 4;
+                        _hitstop_duration = 11;
                     }
                     HitStop(_hitstop_duration);
 					

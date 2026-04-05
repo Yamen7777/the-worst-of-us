@@ -21,7 +21,7 @@ damage_objects = [Ospinning_blade, Oslash, Ofireball, OfireBreath, OfireExplode,
 // Attack system
 attacking = false;
 attack_cooldown = 0;
-attack_cooldown_time = 90;
+attack_cooldown_timer = 90; // Fixed cooldown
 attack_range = 500; // Attack range
 stop_distance = 250; //Stop moving when this close
 attack_created = [false];

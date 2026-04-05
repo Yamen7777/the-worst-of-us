@@ -5,10 +5,8 @@ function HitStop(_duration) {
     global.hitstop_timer = _duration;
     
     // Spawn particles
-    repeat(3) {
-        with(instance_create_layer(x, y, layer, Odust)) {
-            image_blend = c_blue;
-        }
+    with(instance_create_layer(x, y, layer, Odust)) {
+        image_blend = c_blue;
     }
 	
 	screenShake(5,10);
