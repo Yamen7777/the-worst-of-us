@@ -11,6 +11,9 @@ trail_timer = 0;
 
 //health
 hp = 100;
+base_max_health = 100;
+max_level = 25;
+current_max_health = base_max_health;
 hitstun_time = 0; // frames of stun / invincibility after taking damage
 block_cooldown = 0; // frames of cooldown after blocking
 
@@ -123,6 +126,8 @@ attack_crouch_started = false;
 attack_air_started = false;
 attack_heavy2_started = false;
 attack_heavy3_started = false;
+heavy2_slash_created = false;
+heavy3_slash_created = false;
 
 light_attack_index = 0;
 heavy_attack_index = 0;
@@ -133,9 +138,8 @@ light_attack_reset_time = 60;
 
 queued_input = 0; // 0 = none, 1 = light, 2 = heavy
 
-attack_heavy2_duration = 24; // 8 frames at 20fps
-attack_heavy3_duration = 27; // 9 frames at 20fps
-
+attack_heavy2_duration = 30; // 10 frames at 20fps
+attack_heavy3_duration = 30; // 10 frames at 20fps
 crouch_attack = function() {
     var _bladeX = face * 60;
     var _sprite = fire_mode ? SslashFire1 : Sslash1;
@@ -264,31 +268,18 @@ heavy_attack = function(_attack_num) {
         _y_offset = -230;
         _slash_sprite = Sslash2;
         _duration = attack_heavy2_duration;
+        heavy2_slash_created = false;
     } else if (_attack_num == 2) {
         _bladeX = face * 170;
         _y_offset = -160;
         _slash_sprite = Sslash3;
         _duration = attack_heavy3_duration;
+        heavy3_slash_created = false;
     }
     
     attack_timer = _duration;
     
-    with (instance_create_layer(x + _bladeX, y + _y_offset, "bullets", Oslash)) {
-        damage = (5 + (other.upgrade_attack * 2)) * 1.8;
-        sprite_index = _slash_sprite;
-        image_xscale = other.face * 1.5;
-		if (_attack_num == 1) 
-		{
-			image_angle += 25 * other.face;
-			image_yscale = 1.5;
-			clinch = true;
-		}
-		image_blend = c_blue;
-        heavy = true;
-        heavy_variant = _attack_num;
-    }
-    
-    audio_sound_pitch(SNsword, random_range(0.8, 1.0));
+    audio_sound_pitch(SNsword, random_range(0.8, 0.6));
     audio_play_sound(SNsword, 1, false);
     
     // Only use dynamic speed for heavy attack 1, otherwise use fixed minimum
@@ -541,8 +532,15 @@ spell_cooldown_reduction_per_level = 0.15; // -15% cooldown per level (max 75% r
 // Function to level up
 level_up = function() {
     if (player_level < max_level) {
+        // Calculate health increase before leveling up
+        var _old_max_health = 100 + (player_level / 25) * 400;
+        
         player_level++;
         available_upgrade_points++;
+        
+        // Calculate new max health and heal the difference
+        var _new_max_health = 100 + (player_level / 25) * 400;
+        hp += (_new_max_health - _old_max_health);
         
         // Show upgrade cards (will queue if already showing)
         if (instance_exists(Ogame)) {
@@ -632,6 +630,13 @@ upgrade_stat = function(_stat_type) {
 
 // Function to calculate current stats based on upgrades
 calculate_stats = function() {
+    // Max health scales from 100 at level 0 to 500 at level 25
+    // Linear interpolation: 100 + (player_level / 25) * 400
+    current_max_health = 100 + (player_level / 25) * 400;
+    
+    // If hp exceeds new max, clamp it
+    if (hp > current_max_health) hp = current_max_health;
+    
     // Attack damage
     current_damage = base_damage + (upgrade_attack * attack_damage_per_level);
     
@@ -2763,8 +2768,8 @@ STATE_DEAD = function() {
             show_debug_message("Death limit reached (" + string(Ogame.max_deaths_before_stop) + ") - No more level loss this room");
         }
         
-        // Reset HP to full
-        hp = 100;
+        // Reset HP to full (based on current max health)
+        hp = current_max_health;
         
         // Reset blood to 0
         if (instance_exists(ObloodPar)) {

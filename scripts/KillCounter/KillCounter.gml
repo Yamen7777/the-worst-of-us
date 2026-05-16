@@ -12,7 +12,7 @@ function killCounter(_amount = 1) {
         Ogame.kill_counter_target_scale = 1 + Ogame.kill_counter_jump_power;
         Ogame.kill_counter_target_rotation = Ogame.kill_counter_jump_power * 15 * choose(-1, 1);
         
-        // HITSTOP/FRAME FREEZE based on kill value
+        /*// HITSTOP/FRAME FREEZE based on kill value
         var freeze_duration = 2;  // Always 2 frames
         var freeze_room_speed = 7;  // Default slowest
         var kill_pitch = 1.0;
@@ -61,5 +61,6 @@ function killCounter(_amount = 1) {
                 room_speed = freeze_room_speed;
             }
         }
+		*/
     }
 }

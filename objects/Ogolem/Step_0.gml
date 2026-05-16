@@ -45,6 +45,14 @@ if (_hcollide) {
             break;
         }
     }
+    if (flip) {
+        hsp = -hsp;
+        face = sign(hsp);
+    } else {
+        hsp = -sign(hsp) * 20;
+    }
+}
+
 x += hsp * global.delta_time_scale;
 
 //vertica collision  
@@ -113,43 +121,88 @@ if (attack_cooldown > 0) {
     attack_cooldown--;
 }
 
-// Attack logic - only if not attacking and cooldown is done
-if (!attacking && attack_cooldown == 0) and (!invincible) and (hit_stun <= 0) {
+// Attack logic - only if not attacking, not charging, and cooldown is done
+if (!attacking && !charging && attack_cooldown == 0) {
     // Check if player is in attack range
     if (instance_exists(Ocherry)) {
         var _distance = point_distance(x, y, Ocherry.x, Ocherry.y);
         
         if (_distance <= attack_range) {
-            // Start attack
-            attacking = true;
+            // Start charging (back up)
+            charging = true;
             sprite_index = SgolemA;
             image_index = 0;
-            attack_created = [false, false]; // Reset attack tracking
+            attack_created = [false, false, false];
         }
     }
 }
 
-//attack animation
-if (attacking) {
-	hsp = 0;
-    // First attack - at frame 2
-    if (image_index >= 3 && !attack_created[0]) {
+// CHARGING - windup, dash, recovery
+if (charging) {
+    image_speed = 1;
+    
+    // Create orange warning flash at start
+    if (charge_phase == 0 && !attack_created[0]) {
         attack_created[0] = true;
-        
-        // Create first attack hitbox
-        var _attackX = x + (face * 165);
-        with (instance_create_layer(_attackX, y - 200, "bullets", Obandit_attacks)) {
-			sprite_index = Saxe_attack;
-			damage = other.current_damage; // Use calculated damage
-            image_xscale = other.face;
-			image_angle += 35*other.face;
+        charge_phase = 1;
+        var _flash = instance_create_layer(x, y - 350, "effects", Odanger_flash);
+        _flash.sprite_index = Sflash_orange;
+    }
+    
+    // WINDUP: back away from player
+    if (charge_phase == 1) {
+        hsp = -face * windup_speed;
+        if (--windup <= 0) {
+            charge_phase = 2;
         }
     }
     
-    // Check if animation finished
-    if (image_index >= image_number -1) {
-        attacking = false;
-        attack_cooldown = attack_cooldown_time;
+    // DASH: forward fast
+    if (charge_phase == 2) {
+        hsp = face * dash_speed;
+        
+        // Create or update trailing attack hitbox
+        if (!attack_created[1]) {
+            attack_created[1] = true;
+            dash_attack = instance_create_layer(x, y, "bullets", Obandit_attacks);
+            dash_attack.sprite_index = Saxe_attack;
+            dash_attack.damage = current_damage;
+            dash_attack.image_xscale = face;
+            dash_attack.image_angle = 35*face;
+        }
+        
+        // Keep attack in front of Ogolem, locked at frame 1
+        if (instance_exists(dash_attack)) {
+            dash_attack.x = x + (face * 80);
+            dash_attack.y = y - 200;
+            dash_attack.image_index = 1;
+        }
+        
+        if (--dash_frames <= 0) {
+            charge_phase = 3;
+            hsp = 0;
+        }
+    }
+    
+    // RECOVERY: stop and cooldown
+    if (charge_phase == 3) {
+        hsp = 0;
+        
+        // Destroy trailing attack hitbox
+        if (instance_exists(dash_attack)) {
+            with (dash_attack) instance_destroy();
+            dash_attack = noone;
+        }
+        
+        if (--recovery_frames <= 0) {
+            charging = false;
+            attack_cooldown = attack_cooldown_time;
+            charge_phase = 0;
+            attack_created = [false, false];
+            windup = windup_frames;
+            dash_frames = 20;
+            recovery_frames = 15;
+        }
     }
 }
 
@@ -181,8 +234,8 @@ if (variable_instance_exists(id, "hover_height")) {
 if (!place_meeting(x, y + 1, wall) && !_grounded_via_hover) {
     grounded = false;
     
-    // Don't change sprite if attacking or being hit
-    if (!attacking && !invincible) {
+    // Don't change sprite if attacking, charging, or being hit
+    if (!attacking && !charging && !invincible) {
         sprite_index = Sgolem;
         image_speed = 0;
         if (sign(vsp) > 0) image_index = 1; else image_index = 0;
@@ -190,8 +243,8 @@ if (!place_meeting(x, y + 1, wall) && !_grounded_via_hover) {
 } else {
     grounded = true;
     
-    // Don't change sprite if attacking or being hit
-    if (!attacking && !invincible) {
+    // Don't change sprite if attacking, charging, or being hit
+    if (!attacking && !charging && !invincible) {
         image_speed = 1;
         if (hsp == 0) {
             sprite_index = Sgolem;
@@ -351,7 +404,7 @@ if (clinched) {
     } else {
         clinched = false;
     }
-} else if (instance_exists(Ocherry) && !invincible) and (!attacking) {
+} else if (instance_exists(Ocherry) && !invincible && !charging && !attacking) and (!attacking) {
     var _cherry = Ocherry;
     var _detectionRadius = 2500;
     var _distance = point_distance(x, y, _cherry.x, _cherry.y);
@@ -361,8 +414,6 @@ if (clinched) {
     
     // Check if Ocherry is within detection range
     if (_distance <= _detectionRadius) {
-        //audio_sound_pitch(SNzobmie, 0.8);
-        //if (!audio_is_playing(SNzobmie) && hp > 0) audio_play_sound(SNzobmie, 3, true);
         flip = false;
         
         // Calculate horizontal distance to Ocherry
@@ -420,10 +471,9 @@ for (var i = 0; i < array_length(damage_objects); i++) {
 				// Show that same damage number above head
 				show_damage_number(x, y, damager.damage, -370);
                     
-                // Cancel attack only if it was a heavy attack
+                // Only cancel if forced (heavy attacks don't cancel Ogolem)
                 if (variable_instance_exists(damager, "heavy") && damager.heavy == true) {
-                    attacking = false;
-                    attack_cooldown = attack_cooldown_time;
+                    // Even heavy attacks don't cancel - Ogolem is unbreakable during attack
                 }
                     
                 ds_list_add(damaged_by_list, damager);
@@ -460,9 +510,8 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                         ObloodPar.blood += damager.damage;
                     }
                     
-                    // Cancel attack for all attacks (both light and heavy)
-                    attacking = false;
-                    attack_cooldown = attack_cooldown_time;
+                    // Don't cancel attack - Ogolem completes his attack even when hit
+                    // Ogolem is unbreakable during attack sequence
                     
                     // Check variant for different knockback
                     if (variable_instance_exists(damager, "heavy") && damager.heavy == true) {
@@ -545,4 +594,3 @@ if(hit_stun > 0)
 if (attack_cooldown > 0) {
     attack_cooldown--;
 }
-

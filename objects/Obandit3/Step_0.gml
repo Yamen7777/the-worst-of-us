@@ -105,7 +105,7 @@ if (attacking) {
 	hsp = 0;
     if(image_index == 0) with instance_create_layer(x,y-300,"effects",Odanger_flash) sprite_index = Sflash_orange;
     // First attack - at frame 2
-    if (image_index >= 2 && !attack_created[0]) {
+    if (image_index >= 3 && !attack_created[0]) {
         attack_created[0] = true;
         
         // Create first attack hitbox

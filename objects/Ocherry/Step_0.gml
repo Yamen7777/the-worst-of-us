@@ -340,6 +340,22 @@ else if (attack_heavy2) {
         image_index = 0;
         attack_heavy2_started = false;
     }
+    // Create slash at frame 3 (image_index >= 3)
+    if (image_index >= 3 && !heavy2_slash_created) {
+        heavy2_slash_created = true;
+        var _bladeX = face * 160;
+        with (instance_create_layer(x + _bladeX, y - 230, "bullets", Oslash)) {
+            damage = (5 + (other.upgrade_attack * 2)) * 1.8;
+            sprite_index = Sslash2;
+            image_xscale = other.face * 1.5;
+            image_angle += 25 * other.face;
+            image_yscale = 1.5;
+            clinch = true;
+            image_blend = c_blue;
+            heavy = true;
+            heavy_variant = 1;
+        }
+    }
 }
 //heavy attack 2 (now attack_heavy3)
 else if (attack_heavy3) {
@@ -347,6 +363,19 @@ else if (attack_heavy3) {
     if (attack_heavy3_started) {
         image_index = 0;
         attack_heavy3_started = false;
+    }
+    // Create slash at frame 3 (image_index >= 3)
+    if (image_index >= 3 && !heavy3_slash_created) {
+        heavy3_slash_created = true;
+        var _bladeX = face * 170;
+        with (instance_create_layer(x + _bladeX, y - 160, "bullets", Oslash)) {
+            damage = (5 + (other.upgrade_attack * 2)) * 1.8;
+            sprite_index = Sslash3;
+            image_xscale = other.face * 1.5;
+            image_blend = c_blue;
+            heavy = true;
+            heavy_variant = 2;
+        }
     }
 }
 //crouch attack 

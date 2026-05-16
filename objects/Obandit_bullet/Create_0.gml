@@ -1,5 +1,5 @@
 // Movement
-move_speed = 30;
+move_speed = 20;
 
 // Calculate direction to player (with Y offset)
 if (instance_exists(Ocherry)) {

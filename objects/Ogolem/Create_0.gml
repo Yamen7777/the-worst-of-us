@@ -2,7 +2,7 @@ face = 1;
 flip = true;
 hit = false;
 wall = [Owall, Ossplat];
-hover_height = 300;
+hover_height = 100;
 //invincible
 damaged_by_list = ds_list_create();
 invincible_clear_timer = 0;
@@ -22,10 +22,19 @@ damage_objects = [Ospinning_blade, Oslash, Ofireball, OfireBreath, OfireExplode,
 // Attack system
 attacking = false;
 attack_cooldown = 0;
-attack_cooldown_time = 60;
-attack_range = 225; // Attack range
-stop_distance = 200; //Stop moving when this close
+attack_cooldown_time = 90;
+attack_range = 500;
+stop_distance = 400;
 attack_created = [false, false];
+charging = false;
+windup_frames = 35;
+windup = windup_frames;
+windup_speed = -6;
+dash_frames = 20;
+dash_speed = 50;
+recovery_frames = 15;
+charge_phase = 0;
+dash_attack = noone;
 
 // LEVEL SYSTEM
 max_enemy_level = 5;
