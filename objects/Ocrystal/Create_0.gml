@@ -72,7 +72,7 @@ get_max_attack_phases = function() {
 
 // Function to check if special is unlocked
 is_special_unlocked = function() {
-    return enemy_level >= 4;
+    return enemy_level >= 1;
 }
 
 // ========== SPECIAL ATTACK ==========

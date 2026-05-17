@@ -97,10 +97,10 @@ if (!grounded && !attacking && !jump_attacking && !using_special && vsp > -5 && 
 // ========== JUMP ATTACK ANIMATION ==========
 if (jump_attacking) {
     // Create attack hitbox during animation
-    if (image_index >= 3 && !attack_created[0]) {
+    if (image_index >= 5 && !attack_created[0]) {
         attack_created[0] = true;
         
-        with (instance_create_layer(x, y, "bullets", Ofire_attacks)) {
+        with (instance_create_layer(x, y, "bullets", Ocrsytal_attacks)) {
             sprite_index = Scrystal_attack4; // Temporary - until SfireJA sprite has its own hitbox
             damage = other.current_damage;
             image_xscale = other.face;
@@ -140,6 +140,11 @@ if (!attacking && !using_special && !jump_attacking && attack_cooldown == 0 && g
                 image_index = 0;
                 special_cooldown = special_cooldown_time;
                 hsp = 0;
+                attack_created = [false, false, false];
+                
+                // Create red warning flash at start of special
+                var _flash = instance_create_layer(x, y - 300, "effects", Odanger_flash);
+                _flash.sprite_index = Sflash_red;
             } else {
                 // Use Normal Attack based on level
                 attacking = true;
@@ -170,10 +175,10 @@ if (using_special) {
     hsp = 0;
     
     // Create special attack hitbox
-    if (image_index >= 12 && !attack_created[0]) {
+    if (image_index >= 8 && !attack_created[0]) {
         attack_created[0] = true;
         
-        with (instance_create_layer(x, y, "bullets", Ofire_attacks)) {
+        with (instance_create_layer(x, y, "bullets", Ocrsytal_attacks)) {
             sprite_index = Scrystal_attack5; // Temporary until you make the special sprite
             damage = other.current_damage * 1.5; // Special does 1.5x damage
             image_xscale = other.face;
@@ -200,27 +205,22 @@ if (attacking) {
     }
     
     // ATTACK 1: Always available (Level 1+)
-    if (_max_phases >= 1 && image_index >= 5 && !attack_created[0]) {
+    if (_max_phases >= 1 && image_index >= 4 && !attack_created[0]) {
         attack_created[0] = true;
         
-        with (instance_create_layer(x, y, "bullets", Ofire_attacks)) {
+        with (instance_create_layer(x, y, "bullets", Ocrsytal_attacks)) {
             sprite_index = Scrystal_attack1;
             damage = other.current_damage;
             image_xscale = other.face;
         }
     }
     
-    // ATTACK 2: Level 2+ 
-    // Lunge forward during frames 10-15
-    if (_max_phases >= 2 && image_index >= 10 && image_index < 15) {
-        hsp = 10 * face; // Small lunge forward
-    }
-    
+    // ATTACK 2: Level 2+     
     // Create slash 2 hitbox at frame 12
     if (_max_phases >= 2 && image_index >= 12 && !attack_created[1]) {
         attack_created[1] = true;
         
-        with (instance_create_layer(x, y, "bullets", Ofire_attacks)) {
+        with (instance_create_layer(x, y, "bullets", Ocrsytal_attacks)) {
             sprite_index = Scrystal_attack2;
             damage = other.current_damage;
             image_xscale = other.face;
@@ -228,10 +228,10 @@ if (attacking) {
     }
     
     // ATTACK 3: Level 3+
-    if (_max_phases >= 3 && image_index >= 22 && !attack_created[2]) {
+    if (_max_phases >= 3 && image_index >= 16 && !attack_created[2]) {
         attack_created[2] = true;
         
-        with (instance_create_layer(x, y, "bullets", Ofire_attacks)) {
+        with (instance_create_layer(x, y, "bullets", Ocrsytal_attacks)) {
             sprite_index = Scrystal_attack3;
             damage = other.current_damage;
             image_xscale = other.face;
@@ -394,7 +394,18 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                 }
                 hsp = sign(x - damager.x);
                 
-                // UNSTOPPABLE: Never cancel attacks when hit - he takes damage but keeps attacking
+                // Cancel normal attacks when hit, but NOT special attack
+                if (!using_special) {
+                    if (attacking) {
+                        attacking = false;
+                        attack_cooldown = attack_cooldown_time;
+                    }
+                    if (jump_attacking) {
+                        jump_attacking = false;
+                        attack_cooldown = attack_cooldown_time;
+                    }
+                }
+                
                 // Show that same damage number above head
 				show_damage_number(x, y, damager.damage, -420);
                 ds_list_add(damaged_by_list, damager);
@@ -409,8 +420,21 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                         ObloodPar.blood += damager.damage;
                     }
                     image_blend = c_red;
+					
 					// Show that same damage number above head
 					show_damage_number(x, y, damager.damage, -420);
+                    
+                    // Cancel normal attacks when hit, but NOT special attack
+                    if (!using_special) {
+                        if (attacking) {
+                            attacking = false;
+                            attack_cooldown = attack_cooldown_time;
+                        }
+                        if (jump_attacking) {
+                            jump_attacking = false;
+                            attack_cooldown = attack_cooldown_time;
+                        }
+                    }
                     
                     ds_list_add(damaged_by_list, damager);
                     invincible_clear_timer = invincible_clear_time;
@@ -428,7 +452,17 @@ for (var i = 0; i < array_length(damage_objects); i++) {
 					// Show that same damage number above head
 					show_damage_number(x, y, damager.damage, -420);
                     
-                    // UNSTOPPABLE: Never cancel attacks when hit - he takes damage but keeps attacking
+                    // Cancel normal attacks when hit, but NOT special attack
+                    if (!using_special) {
+                        if (attacking) {
+                            attacking = false;
+                            attack_cooldown = attack_cooldown_time;
+                        }
+                        if (jump_attacking) {
+                            jump_attacking = false;
+                            attack_cooldown = attack_cooldown_time;
+                        }
+                    }
                     
                     ds_list_add(damaged_by_list, damager);
                     invincible = true;

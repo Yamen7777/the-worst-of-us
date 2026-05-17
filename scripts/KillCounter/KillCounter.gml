@@ -12,7 +12,7 @@ function killCounter(_amount = 1) {
         Ogame.kill_counter_target_scale = 1 + Ogame.kill_counter_jump_power;
         Ogame.kill_counter_target_rotation = Ogame.kill_counter_jump_power * 15 * choose(-1, 1);
         
-        /*// HITSTOP/FRAME FREEZE based on kill value
+        // HITSTOP/FRAME FREEZE based on kill value
         var freeze_duration = 2;  // Always 2 frames
         var freeze_room_speed = 7;  // Default slowest
         var kill_pitch = 1.0;
@@ -44,15 +44,15 @@ function killCounter(_amount = 1) {
             score_pitch = 1.0;
         }
         
-        // Apply the hitstop ONLY if not already in hitstop
+// Apply the hitstop ONLY if not already in hitstop
         if (freeze_duration > 0) {
             // Play SNhit BEFORE the freeze starts
             audio_play_sound(SNhit, 10, false);
             
             // ONLY apply hitstop if we're not already in one, OR if this kill is bigger
-            if (Ogame.hitstop_timer <= 0 || freeze_room_speed < room_speed) {
+            if (global.hitstop_timer <= 0 || freeze_room_speed < room_speed) {
                 // Store sound data in Ogame to play after freeze
-                Ogame.hitstop_timer = freeze_duration;
+                global.hitstop_timer = freeze_duration;
                 Ogame.hitstop_kill_pitch = kill_pitch;
                 Ogame.hitstop_score_pitch = score_pitch;
                 Ogame.normal_room_speed = room_speed;
@@ -61,6 +61,5 @@ function killCounter(_amount = 1) {
                 room_speed = freeze_room_speed;
             }
         }
-		*/
     }
 }

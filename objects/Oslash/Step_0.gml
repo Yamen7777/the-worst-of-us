@@ -3,6 +3,17 @@ if(instance_exists(Ocherry)) hsp = Ocherry.hsp * global.delta_time_scale;
 if(instance_exists(Ocherry)) vsp = Ocherry.vsp * global.delta_time_scale;
 image_speed = 1 * global.delta_time_scale;
 
+// Check if hitting Ojack or children (only trigger hitstop once per attack)
+var _enemy = instance_place(x, y, Ojack);
+if (_enemy != noone && !hitstop_triggered) {
+    hitstop_triggered = true;
+    if (heavy) {
+        HitStop(11);
+    } else {
+        HitStop(9);
+    }
+}
+
 if(image_index == 2) 
 {
 	//fire mode

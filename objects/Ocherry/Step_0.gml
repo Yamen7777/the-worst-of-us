@@ -183,6 +183,12 @@ if (keyboard_check_pressed(ord("J"))) and (instance_exists(Ojack)) {
     Ojack.hp = 1000;
 }
 
+// TEST: Press J to increase enemy health 
+if (keyboard_check_pressed(ord("U"))) and (instance_exists(Ojack)) {
+    current_max_health = 1000;
+	hp = 1000;
+}
+
 //error screen 
 if(player_level == 25) 
 {

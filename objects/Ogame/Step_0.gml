@@ -3,6 +3,10 @@ if (global.hitstop_timer > 0) {
     global.hitstop_timer--;
     if (global.hitstop_timer <= 0) {
         global.delta_time_scale = 1;
+        // Restore room speed after hitstop ends
+        if (room_speed != 60) {
+            room_speed = 60;
+        }
     }
 }
 

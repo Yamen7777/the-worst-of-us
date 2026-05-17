@@ -7,7 +7,6 @@ if (hp <= 0)
 			image_blend = c_red;
 		}
 	}
-	killCounter(2);
 	audio_stop_sound(SNzobmie);
 	
 	// HEALTH POTION DROP SYSTEM

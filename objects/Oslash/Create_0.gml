@@ -7,3 +7,4 @@ heavy = false;
 heavy_variant = 0;
 light_variant = 0;
 clinch = false;
+hitstop_triggered = false;

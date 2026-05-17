@@ -7,7 +7,6 @@ if (hp <= 0)
 			image_blend = c_red;
 		}
 	}
-	killCounter(2);
 	audio_stop_sound(SNzobmie);
 	
 	// HEALTH POTION DROP SYSTEM
@@ -40,7 +39,7 @@ if (hp <= 0)
 	    potion_inst.vsp = -8; // Upward launch
 	}
 	
-	with (instance_create_layer(x,y,layer,OcrystalD))
+	with (instance_create_layer(x,y,layer,OfireD))
 	{
 		image_yscale = other.size;
 		image_xscale = other.image_xscale;
