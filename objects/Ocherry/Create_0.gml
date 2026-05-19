@@ -1149,7 +1149,7 @@ STATE_FREE = function()
 	//jump
 	_jumping = false;
 	// Ground jump block
-	if (canJump && Jbuffer && wall_time <= 0 && ((!down) || _solidFloor)) and (!attack) and (hasControl) {
+	if (canJump && Jbuffer && wall_time <= 0 && ((!down) || _solidFloor)) and (hasControl) {
 	    audio_sound_pitch(SNjumpWing, random_range(0.9, 1.1));
 	    audio_play_sound(SNjumpWing, 3, false);
 	    Jcount = 1;
@@ -1167,6 +1167,17 @@ STATE_FREE = function()
 	    Jbuffer = false;
 	    Jbuffer_timer = 0;
 		_jumping = true;
+		
+		 // Cancel any ongoing attack
+	    attack1 = false;
+	    attack2 = false;
+	    attack3 = false;
+	    attack_crouch = false;
+	    attack_heavy2 = false;
+	    attack_heavy3 = false;
+	    attack_timer = 0;
+	    combo_window_timer = 0;
+	    queued_input = 0;
 	}
 	
 	if (!jump_hold)
