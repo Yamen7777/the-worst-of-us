@@ -98,13 +98,16 @@ dash_cooldown = dashT;
 //dodge
 dodging = false;
 canDodge = false;
-dodgeDistance = 250;
+dodgeDistance = 100;
 dodgeTime = 20;
 dodgeDirection = 0;
 dodgeEnergy = 0;
 dodged = false;
-dodgeT = 45;
+dodgeT = 10;
 dodge_cooldown = dodgeT;
+dodge_buffer = false;
+dodge_buffer_timer = 0;
+dodge_buffer_time = 1000;
 
 //attacking
 attack = false;
@@ -988,6 +991,16 @@ STATE_FREE = function()
 	    else if (!sliding_ground) {
 	        // Normal crouching (only if NOT sliding)
 	        crouching = true;
+			// Cancel any ongoing attack
+		    attack1 = false;
+		    attack2 = false;
+		    attack3 = false;
+		    attack_air = false;
+		    attack_heavy2 = false;
+		    attack_heavy3 = false;
+		    attack_timer = 0;
+		    combo_window_timer = 0;
+		    queued_input = 0;
 	    }
 	}
 	else {
@@ -1313,11 +1326,41 @@ STATE_FREE = function()
 	    wasGround = false;
 	}
 	
-	//Dodge
-	dodging = false;
-	// Check if dash is unlocked (speed level >= 1) and has enough blood
-	if (dodge and canDodge) 
+	//Dodge buffer - store press for 10 frames if dodge not available
+	if (dodge and !canDodge) {
+	    dodge_buffer = true;
+	    dodge_buffer_timer = dodge_buffer_time;
+	}
+	
+	//Dodge buffer timer
+	if (dodge_buffer_timer > 0) {
+	    dodge_buffer_timer--;
+	    if (dodge_buffer_timer <= 0) {
+	        dodge_buffer = false;
+	        dodge_buffer_timer = 0;
+	    }
+	}
+	
+	//Dodge cooldown
+	if(dodge_cooldown > 0) and (dodged)
 	{
+		dodge_cooldown--;
+		canDodge = false;
+	}
+	else
+	{
+		canDodge = true;
+		dodge_cooldown = dodgeT;
+		dodged = false;
+	}
+	
+	//Dodge - buffer fires when cooldown ends, or normal press when available
+	dodging = false;
+	if ((dodge_buffer or dodge) and canDodge) 
+	{
+	    dodge_buffer = false;
+	    dodge_buffer_timer = 0;
+	    
 	    // Cancel any ongoing attack
 	    attack1 = false;
 	    attack2 = false;
@@ -1345,19 +1388,6 @@ STATE_FREE = function()
 	    dodgeEnergy = dodgeDistance;
 	    STATE = STATE_DODGE;
 	    dodged = true;
-	}
-	
-	//Dodge cooldown
-	if(dodge_cooldown > 0) and (dodged)
-	{
-		dodge_cooldown--;
-		canDodge = false;
-	}
-	else
-	{
-		canDodge = true;
-		dodge_cooldown = dodgeT;
-		dodged = false;
 	}
 	
 	//dash
@@ -1940,7 +1970,46 @@ STATE_FREE = function()
 				while (!place_meeting(x + _pixel_check,y,Owall)) {x += _pixel_check;}	
 				hsp = 0;
 			}
+}
+	}
+ 	
+	//enemy horizantal collision (stop at enemy boundary)
+	if (hsp > 0 and place_meeting(x + hsp, y, Ojack)) {
+		var _enemyX = instance_place(x + hsp, y, Ojack);
+		if (_enemyX != noone) {
+			var _pushX = _enemyX.bbox_left - bbox_right;
+			while (place_meeting(x + _pushX, y, Ojack)) { _pushX--; }
+			while (!place_meeting(x + _pushX, y, Ojack)) { x++; }
+			hsp = 0;
 		}
+	} else if (hsp < 0 and place_meeting(x + hsp, y, Ojack)) {
+		var _enemyX = instance_place(x + hsp, y, Ojack);
+		if (_enemyX != noone) {
+			var _pushX = _enemyX.bbox_right - bbox_left;
+			while (place_meeting(x + _pushX, y, Ojack)) { _pushX++; }
+			while (!place_meeting(x + _pushX, y, Ojack)) { x--; }
+			hsp = 0;
+		}
+	}
+	
+	//enemy collision (push left/right based on relative position, only while touching with overlap)
+	if (place_meeting(x, y, Ojack)) {
+		var _enemyList = ds_list_create();
+		var _enemyCount = instance_place_list(x, y, Ojack, _enemyList, false);
+		for (var i = 0; i < _enemyCount; i++) {
+			var _enemy = _enemyList[| i];
+			if (_enemy != noone) {
+				var _overlapX = min(bbox_right, _enemy.bbox_right) - max(bbox_left, _enemy.bbox_left);
+				if (_overlapX >= 5) {
+					if (x < _enemy.x) {
+						hsp -= 6;
+					} else {
+						hsp += 6;
+					}
+				}
+			}
+		}
+		ds_list_destroy(_enemyList);
 	}
 
 	//going down slopes
@@ -2045,7 +2114,6 @@ STATE_FREE = function()
 		onground(true);
 	}
 
-
 	//manually fall through semisolid platrform
 	if (down) and (jump)
 	{
@@ -2108,28 +2176,8 @@ STATE_FREE = function()
 		{
 			y = MyFloorPlat.bbox_top; //un-floor the Y
 		}
-	
-							/*
-							//going up a solid solid wall
-							if (MyFloorPlat.vsp < 0) and (place_meeting(x,y + MyFloorPlat.vsp,Owall))
-							{
-								//check to for going throw semisolid platform
-								if (MyFloorPlat.object_index == Ossplat) or (object_is_ancestor(MyFloorPlat.object_index, Ossplat))
-								{
-									//go throw the semisolid platform
-									var _subpixel = 0.25;
-									while (place_meeting(x,y + MyFloorPlat.vsp,Owall)) { y += _subpixel;}
-		
-									//if we got pushes into a solid wall, push ourselfs back out
-									while (place_meeting(x,y,Owall)) {y -= _subpixel}
-									y = round(y);
-								}
-								//cancel the platform variable
-								onground(false);
-							}
-							*/
 	}
-
+		
 	//get pushed down a semisolid by a moving platform
 	if (instance_exists(MyFloorPlat))
 	and ( (MyFloorPlat.object_index == Ossplat) or (object_is_ancestor(MyFloorPlat.object_index,Ossplat)) )
@@ -2138,7 +2186,7 @@ STATE_FREE = function()
 		//check for moving plarform
 		//add crush later
 		//dont check too far so we dont warp 
-		var _maxPushDist = 20;
+		var _maxPushDist = 10;
 		var _pushedDist = 0;
 		var _startY = y;
 		while (place_meeting(x,y,Owall)) and (_pushedDist <= _maxPushDist)
@@ -2188,10 +2236,10 @@ STATE_DASH = function()
 		        image_xscale = other.face;
 		        image_blend = _colors;
 		        image_alpha = 0.6;
-        
+         
 		        fade_speed = 0.08; // Faster fade
 		    }
-    
+     
 		    trail_timer = 2; // Create trail every x frames
 		}
 		trail_timer--;
@@ -2325,8 +2373,7 @@ STATE_DASH = function()
 		//collide with the ground
 		vsp = 0;
 		onground(true);
-	}
-
+}
 
 	//manually fall through semisolid platrform
 	if (down) and (jump)
@@ -2390,28 +2437,8 @@ STATE_DASH = function()
 		{
 			y = MyFloorPlat.bbox_top; //un-floor the Y
 		}
-	
-							/*
-							//going up a solid solid wall
-							if (MyFloorPlat.vsp < 0) and (place_meeting(x,y + MyFloorPlat.vsp,Owall))
-							{
-								//check to for going throw semisolid platform
-								if (MyFloorPlat.object_index == Ossplat) or (object_is_ancestor(MyFloorPlat.object_index, Ossplat))
-								{
-									//go throw the semisolid platform
-									var _subpixel = 0.25;
-									while (place_meeting(x,y + MyFloorPlat.vsp,Owall)) { y += _subpixel;}
-		
-									//if we got pushes into a solid wall, push ourselfs back out
-									while (place_meeting(x,y,Owall)) {y -= _subpixel}
-									y = round(y);
-								}
-								//cancel the platform variable
-								onground(false);
-							}
-							*/
 	}
-
+		
 	//get pushed down a semisolid by a moving platform
 	if (instance_exists(MyFloorPlat))
 	and ( (MyFloorPlat.object_index == Ossplat) or (object_is_ancestor(MyFloorPlat.object_index,Ossplat)) )
@@ -2618,7 +2645,6 @@ STATE_DODGE = function()
 		onground(true);
 	}
 
-
 	//manually fall through semisolid platrform
 	if (down) and (jump)
 	{
@@ -2681,28 +2707,8 @@ STATE_DODGE = function()
 		{
 			y = MyFloorPlat.bbox_top; //un-floor the Y
 		}
-	
-							/*
-							//going up a solid solid wall
-							if (MyFloorPlat.vsp < 0) and (place_meeting(x,y + MyFloorPlat.vsp,Owall))
-							{
-								//check to for going throw semisolid platform
-								if (MyFloorPlat.object_index == Ossplat) or (object_is_ancestor(MyFloorPlat.object_index, Ossplat))
-								{
-									//go throw the semisolid platform
-									var _subpixel = 0.25;
-									while (place_meeting(x,y + MyFloorPlat.vsp,Owall)) { y += _subpixel;}
-		
-									//if we got pushes into a solid wall, push ourselfs back out
-									while (place_meeting(x,y,Owall)) {y -= _subpixel}
-									y = round(y);
-								}
-								//cancel the platform variable
-								onground(false);
-							}
-							*/
 	}
-
+		
 	//get pushed down a semisolid by a moving platform
 	if (instance_exists(MyFloorPlat))
 	and ( (MyFloorPlat.object_index == Ossplat) or (object_is_ancestor(MyFloorPlat.object_index,Ossplat)) )

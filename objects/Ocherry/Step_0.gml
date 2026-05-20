@@ -202,6 +202,15 @@ if place_meeting(x,y,Owall)
 	STATE = STATE_DEAD;
 }
 
+//crouching mask
+if(sprite_index == ScabeC) or (sprite_index == ScabeCA)
+{
+	mask_index = ScabeC;
+}
+else 
+{
+	mask_index = Scabe;
+}
 // SPRITE CONTROL
 //fusing
 if(STATE = STATE_FUSE)

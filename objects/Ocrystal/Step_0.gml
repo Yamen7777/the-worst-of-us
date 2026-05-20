@@ -428,10 +428,12 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     if (!using_special) {
                         if (attacking) {
                             attacking = false;
+                            attack_created = [false, false, false];
                             attack_cooldown = attack_cooldown_time;
                         }
                         if (jump_attacking) {
                             jump_attacking = false;
+                            attack_created = [false, false, false];
                             attack_cooldown = attack_cooldown_time;
                         }
                     }
@@ -456,10 +458,12 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     if (!using_special) {
                         if (attacking) {
                             attacking = false;
+                            attack_created = [false, false, false];
                             attack_cooldown = attack_cooldown_time;
                         }
                         if (jump_attacking) {
                             jump_attacking = false;
+                            attack_created = [false, false, false];
                             attack_cooldown = attack_cooldown_time;
                         }
                     }

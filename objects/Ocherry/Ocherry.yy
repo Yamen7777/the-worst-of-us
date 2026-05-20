@@ -44,8 +44,8 @@
     "path":"sprites/Scabe1/Scabe1.yy",
   },
   "spriteMaskId":{
-    "name":"Scabe1",
-    "path":"sprites/Scabe1/Scabe1.yy",
+    "name":"Scabe",
+    "path":"sprites/Scabe/Scabe.yy",
   },
   "visible":true,
 }

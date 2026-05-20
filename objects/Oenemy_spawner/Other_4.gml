@@ -1,4 +1,5 @@
 /// @description Room Start - spawn enemies after Ogame is initialized
+/// @description Room Start - spawn enemies after Ogame is initialized
 
 // Get danger budget and player level from Ogame
 var danger_budget = 20;
