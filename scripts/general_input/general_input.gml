@@ -29,8 +29,22 @@ function general_input(){
 		dash = keyboard_check_pressed(vk_control) or gamepad_button_check_pressed(0,gp_shoulderlb);
 		
 		//blocking
-		dodge = keyboard_check_pressed(ord("f")) or keyboard_check_pressed(ord("F"))
+		dodge = keyboard_check_pressed(ord("f")) or keyboard_check_pressed(ord("F"));
 		block = 0;
+		// Dodge buffer (like jump buffer)
+		if (dodge) {
+		    dodge_buffer = true;
+		    dodge_buffer_timer = dodge_buffer_time;
+		    show_debug_message("DODGE BUFFER: set (timer: " + string(dodge_buffer_time) + ")");
+		}
+		if (dodge_buffer_timer > 0) {
+		    dodge_buffer_timer--;
+		    if (dodge_buffer_timer <= 0) {
+		        dodge_buffer = false;
+		        dodge_buffer_timer = 0;
+		        show_debug_message("DODGE BUFFER: expired");
+		    }
+		}
 		// Attack - R2 (gp_shoulderr) - PRESSED
 		LMB = mouse_check_button_pressed(mb_left) or gamepad_button_check_pressed(0,gp_shoulderr);
 
@@ -75,5 +89,6 @@ function general_input(){
 		jump = 0;
 		jump_hold = 0;
 		running = 0;
+		dodge = 0;
 	}
 }

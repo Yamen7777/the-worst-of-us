@@ -107,7 +107,7 @@ dodgeT = 10;
 dodge_cooldown = dodgeT;
 dodge_buffer = false;
 dodge_buffer_timer = 0;
-dodge_buffer_time = 1000;
+dodge_buffer_time = 10;
 
 //attacking
 attack = false;
@@ -991,16 +991,18 @@ STATE_FREE = function()
 	    else if (!sliding_ground) {
 	        // Normal crouching (only if NOT sliding)
 	        crouching = true;
-			// Cancel any ongoing attack
-		    attack1 = false;
-		    attack2 = false;
-		    attack3 = false;
-		    attack_air = false;
-		    attack_heavy2 = false;
-		    attack_heavy3 = false;
-		    attack_timer = 0;
-		    combo_window_timer = 0;
-		    queued_input = 0;
+			// Cancel any ongoing attack (but not crouch attack)
+		    if (!attack_crouch) {
+		        attack1 = false;
+		        attack2 = false;
+		        attack3 = false;
+		        attack_air = false;
+		        attack_heavy2 = false;
+		        attack_heavy3 = false;
+		        attack_timer = 0;
+		        combo_window_timer = 0;
+		        queued_input = 0;
+		    }
 	    }
 	}
 	else {
@@ -1326,38 +1328,31 @@ STATE_FREE = function()
 	    wasGround = false;
 	}
 	
-	//Dodge buffer - store press for 10 frames if dodge not available
-	if (dodge and !canDodge) {
-	    dodge_buffer = true;
-	    dodge_buffer_timer = dodge_buffer_time;
-	}
-	
-	//Dodge buffer timer
-	if (dodge_buffer_timer > 0) {
-	    dodge_buffer_timer--;
-	    if (dodge_buffer_timer <= 0) {
-	        dodge_buffer = false;
-	        dodge_buffer_timer = 0;
-	    }
-	}
-	
-	//Dodge cooldown
-	if(dodge_cooldown > 0) and (dodged)
+	// Dodge cooldown - only count down when dodged flag is active
+	if (dodged)
 	{
-		dodge_cooldown--;
-		canDodge = false;
+	    if (dodge_cooldown > 0)
+	    {
+	        dodge_cooldown--;
+	        canDodge = false;
+	        if (dodge_cooldown <= 0)
+	        {
+	            canDodge = true;
+	            dodged = false;
+	            show_debug_message("DODGE: cooldown ended, canDodge=true");
+	        }
+	    }
 	}
 	else
 	{
-		canDodge = true;
-		dodge_cooldown = dodgeT;
-		dodged = false;
+	    canDodge = true;
 	}
 	
-	//Dodge - buffer fires when cooldown ends, or normal press when available
+	// Dodge execution - buffer fires when cooldown ends, or direct press works immediately
 	dodging = false;
 	if ((dodge_buffer or dodge) and canDodge) 
 	{
+	    show_debug_message("DODGE: FIRING (buffer=" + string(dodge_buffer) + " dodge=" + string(dodge) + ")");
 	    dodge_buffer = false;
 	    dodge_buffer_timer = 0;
 	    
@@ -1386,6 +1381,7 @@ STATE_FREE = function()
 
 	    dodgeSPD = dodgeDistance / dodgeTime;
 	    dodgeEnergy = dodgeDistance;
+	    dodge_cooldown = dodgeT;
 	    STATE = STATE_DODGE;
 	    dodged = true;
 	}
@@ -1631,10 +1627,9 @@ STATE_FREE = function()
     }
 	}
 
-	// CROUCH ATTACK FINISHED
+	// CROUCH ATTACK FINISHED (no cooldown - spammable)
 	if (attack_crouch && attack_timer == 0) {
 	    attack_crouch = false;
-	    cooldown_timer = cooldown_duration; // Start cooldown
 	}
 
 	// AIR ATTACK FINISHED

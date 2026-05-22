@@ -150,6 +150,10 @@ if (!attacking && !using_special && !jump_attacking && attack_cooldown == 0 && g
                 attacking = true;
                 hsp = 0;
                 
+                // Create orange warning flash at start of normal attack
+                var _flash = instance_create_layer(x, y - 300, "effects", Odanger_flash);
+                _flash.sprite_index = Sflash_orange;
+                
                 // Choose attack sprite based on unlocked phases
                 switch(_max_phases) {
                     case 1:
@@ -379,17 +383,6 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                 }
                 hsp = sign(x - damager.x);
                 
-                // Cancel normal attacks when hit, but NOT special attack
-                if (!using_special) {
-                    if (attacking) {
-                        attacking = false;
-                        attack_cooldown = attack_cooldown_time;
-                    }
-                    if (jump_attacking) {
-                        jump_attacking = false;
-                        attack_cooldown = attack_cooldown_time;
-                    }
-                }
                 
                 // Show that same damage number above head
 				show_damage_number(x, y, damager.damage, -420);
@@ -409,19 +402,6 @@ for (var i = 0; i < array_length(damage_objects); i++) {
 					// Show that same damage number above head
 					show_damage_number(x, y, damager.damage, -420);
                     
-                    // Cancel normal attacks when hit, but NOT special attack
-                    if (!using_special) {
-                        if (attacking) {
-                            attacking = false;
-                            attack_created = [false, false, false];
-                            attack_cooldown = attack_cooldown_time;
-                        }
-                        if (jump_attacking) {
-                            jump_attacking = false;
-                            attack_created = [false, false, false];
-                            attack_cooldown = attack_cooldown_time;
-                        }
-                    }
                     
                     ds_list_add(damaged_by_list, damager);
                     invincible_clear_timer = invincible_clear_time;
@@ -439,19 +419,6 @@ for (var i = 0; i < array_length(damage_objects); i++) {
 					// Show that same damage number above head
 					show_damage_number(x, y, damager.damage, -420);
                     
-                    // Cancel normal attacks when hit, but NOT special attack
-                    if (!using_special) {
-                        if (attacking) {
-                            attacking = false;
-                            attack_created = [false, false, false];
-                            attack_cooldown = attack_cooldown_time;
-                        }
-                        if (jump_attacking) {
-                            jump_attacking = false;
-                            attack_created = [false, false, false];
-                            attack_cooldown = attack_cooldown_time;
-                        }
-                    }
                     
                     ds_list_add(damaged_by_list, damager);
                     invincible = true;

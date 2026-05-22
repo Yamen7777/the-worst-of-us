@@ -15,15 +15,15 @@ damage_objects = [Ospinning_blade, Oslash, Ofireball, OfireBreath, OfireExplode,
 attacking = false;
 attack_cooldown = 0;
 attack_cooldown_time = 60;
-attack_range = 225; // Attack range
-stop_distance = 200; //Stop moving when this close
+attack_range = 275; // Attack range
+stop_distance = 250; //Stop moving when this close
 attack_created = [false, false, false];
 
 // LEVEL SYSTEM
 max_enemy_level = 5;
 
 // Base stats (level 1)
-base_damage = 20;
+base_damage = 10;
 
 // Current stats (calculated from level)
 hp = base_hp;
