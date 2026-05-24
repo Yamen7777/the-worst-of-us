@@ -8,16 +8,16 @@ var _enemy = instance_place(x, y, Ojack);
 if (_enemy != noone && !hitstop_triggered) {
     hitstop_triggered = true;
     if (heavy) {
-        HitStop(11);
+        HitStop(13);
     } else {
         HitStop(9);
     }
     // Push enemy based on attack type
     with (_enemy) {
         if (other.light_variant == 4) {
-            hsp = Ocherry.face * 22;
+            hsp = Ocherry.face * 25;
         } else if (other.heavy && other.heavy_variant == 2) {
-            hsp = Ocherry.face * 37;
+            hsp = Ocherry.face * 40;
         }
         if (variable_instance_exists(self, "push_state")) {
             push_state = true;

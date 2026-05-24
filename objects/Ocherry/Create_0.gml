@@ -20,6 +20,8 @@ block_cooldown = 0; // frames of cooldown after blocking
 //moving
 face = 1;
 run = 0;
+skidding = false;
+skid_cooldown = 0;
 walkSP[0] = 20;
 walkSP[1] = 35;
 hsp = 0;
@@ -137,11 +139,12 @@ light1_slash_created = false;
 light2_slash_created = false;
 light3_slash_created = false;
 light4_slash_created = false;
+crouch_slash_created = false;
 
 light_attack_index = 0;
 heavy_attack_index = 0;
 heavy_attack_reset_timer = 0;
-heavy_attack_reset_time = 60;
+heavy_attack_reset_time = 90;
 light_attack_reset_timer = 0;
 light_attack_reset_time = 60;
 
@@ -155,17 +158,6 @@ crouch_attack = function() {
     
     attack_timer = attack_crouch_duration;
     
-    with(instance_create_layer(x + _bladeX, y - 80, "bullets", Oslash)) {
-        damage = 5 + (other.upgrade_attack * 2);
-        sprite_index = _sprite;
-        image_xscale = other.face;
-        image_yscale = -1;
-        heavy = false;
-    }
-    
-    audio_sound_pitch(SNsword, random_range(1, 1.2));
-    audio_play_sound(SNsword, 1, false);
-    
     hsp = face * get_enemy_forward_speed(0, 3);
     heavy_attack_reset_timer = heavy_attack_reset_time;
     light_attack_reset_timer = light_attack_reset_time;
@@ -177,16 +169,6 @@ air_attack = function() {
     
     attack_timer = attack_air_duration;
     
-    with(instance_create_layer(x + _bladeX, y - 140, "bullets", Oslash)) {
-        damage = 5 + (other.upgrade_attack * 2);
-        sprite_index = _sprite;
-        image_xscale = other.face;
-        heavy = false;
-    }
-    
-    audio_sound_pitch(SNsword, random_range(1, 1.2));
-    audio_play_sound(SNsword, 1, false);
-    
     hsp = face * get_enemy_forward_speed(1, 5);
     heavy_attack_reset_timer = heavy_attack_reset_time;
     light_attack_reset_timer = light_attack_reset_time;
@@ -196,22 +178,11 @@ hold_attack_release = function() {
     var _bladeX = face * 130;
     var _sprite = fire_mode ? SslashFire2 : Sslash2;
     
-    attack_timer = attack2_duration;
+    attack_timer = hold_attack_duration;
     attack2 = true;
     attack2_started = true;
     attack2_is_hold = true;
-    
-    with(instance_create_layer(x + _bladeX, y - 140, "bullets", Oslash)) {
-        damage = (5 + (other.upgrade_attack * 2)) * 2;
-        sprite_index = _sprite;
-        image_xscale = other.face * 1.5;
-        image_yscale = 1.5;
-        image_angle += 125 * other.face;
-        heavy = false;
-    }
-    
-    audio_sound_pitch(SNsword, random_range(0.8, 0.9));
-    audio_play_sound(SNsword, 1, false);
+    hold_slash_created = false;
     
     hsp = face * get_enemy_forward_speed(2.5, 7);
     cooldown_timer = cooldown_duration;
@@ -384,10 +355,11 @@ attack1_duration = 33; // 11 frames at 20fps
 attack2_duration = 27; // 9 frames at 20fps
 attack3_duration = 21; // 7 frames at 20fps
 attack4_duration = 27; // 9 frames at 20fps
-attack_crouch_duration = 22; // 5 frames at 15fps + 2
-attack_air_duration = 22; // 5 frames at 15fps + 2
+attack_crouch_duration = 36; // 12 frames at 20fps
+attack_air_duration = 22; // 5 frames at 15fps
+hold_attack_duration = 39; // 13 frames at 20fps
 cooldown_duration = 2; // Cooldown after combo ends
-combo_window_start = 24; // Combo window scaled for 15fps
+combo_window_start = 45; // Combo window (~0.75s at 60fps)
 
 //hold attack
 hold_attack = false;
@@ -876,7 +848,8 @@ damage_taken = function(_damage, _source_x = undefined, _source_facing = undefin
         
         hold_time = 0;
         hold_attack_charged = false;
-        attack2_is_hold = false; // Reset hold attack flag if interrupted
+        attack2_is_hold = false;
+        hold_slash_created = false;
         
         // Knockback
         var _dir = 1;
@@ -1043,7 +1016,7 @@ STATE_FREE = function()
 	
 	
 	//running
-	if(shift) and ((ground) or (Jcount >= 1))
+	if(shift) and ((ground) or (Jcount >= 1)) and (!crouching)
 	{
 	    run = true;
 	}
@@ -1114,10 +1087,22 @@ STATE_FREE = function()
 	            hsp = lerp(hsp, 0, deccel);
 	        }
 	    }
-    
-	    //stop moving if crouching (but not sliding)
-	    if (crouching && !sliding_ground) hsp = 0;
+	    
+	    // Skid detection - sudden stop or direction change while running
+	    if (skid_cooldown == 0 && move != 0 && sign(move) != sign(hsp) && abs(hsp) > 4) {
+	        skidding = true;
+	        image_index = 0;
+	    } else if (skid_cooldown == 0 && move == 0 && abs(hsp) > 8 && run) {
+	        skidding = true;
+	        image_index = 0;
+	    } else if (skidding && move != 0 && sign(move) == sign(hsp) && abs(hsp) > 8) {
+	        skidding = false;
+	        skid_cooldown = 5;
+	    }
 	}
+	
+	// Skid cooldown countdown
+	if (skid_cooldown > 0) skid_cooldown--;
 
 	//gravity
 	if (cayoteHT > 0)
@@ -1539,17 +1524,14 @@ STATE_FREE = function()
 	if (cooldown_timer > 0) {
 	    cooldown_timer--;
 	}
-	if (combo_window_timer > 0) {
-	    combo_window_timer--;
-	    // Queue input during combo window
-	    if (queued_input == 0) {
-	        if (LMB) {
-	            queued_input = 1;
-	        } else if (RMB) {
-	            queued_input = 2;
-	        }
-	    }
-	}
+    if (combo_window_timer > 0) {
+        combo_window_timer--;
+        if (RMB) {
+            queued_input = 2;
+        } else if (LMB && queued_input == 0) {
+            queued_input = 1;
+        }
+    }
 	if (heavy_attack_reset_timer > 0) {
 	    heavy_attack_reset_timer--;
 	    if (heavy_attack_reset_timer == 0) {
@@ -1575,6 +1557,8 @@ STATE_FREE = function()
 	    if (LMB && !attack_crouch) {
 	        attack_crouch = true;
 	        attack_crouch_started = true;
+crouch_slash_created = false;
+air_slash_created = false;
 	        crouch_attack();
 	    }
 	}
@@ -1583,6 +1567,8 @@ STATE_FREE = function()
 	    if (LMB && !attack_air) {
 	        attack_air = true;
 	        attack_air_started = true;
+air_slash_created = false;
+hold_slash_created = false;
 	        air_attack();
 	    }
 	}

@@ -203,7 +203,7 @@ if place_meeting(x,y,Owall)
 }
 
 //crouching mask
-if(sprite_index == SknightC) or (sprite_index == SknightCA) or (sprite_index == SknightCW) or (sprite_index == SknightCH) or (sprite_index == SknightCD)
+if(sprite_index == SknightC) or (sprite_index == SknightCA) or (sprite_index == SknightCW) or (sprite_index == SknightCH) or (sprite_index == SknightCD) or (sprite_index == SknightSL)
 {
 	mask_index = SknightC;
 }
@@ -211,14 +211,10 @@ else
 {
 	mask_index = Sknight;
 }
+
 // SPRITE CONTROL
-//fusing
-if(STATE = STATE_FUSE)
-{
-    sprite_index = ScabeF;
-}
 //death
-else if(STATE = STATE_DEAD)
+if(STATE = STATE_DEAD)
 {
     sprite_index = SknightD;
 }
@@ -227,6 +223,12 @@ else if(STATE = STATE_DEAD)
 else if (hitstun_time > 0 && !block_deflect)
 {
     sprite_index = SknightHT;
+}
+//dashing
+else if(STATE = STATE_DASH)
+{
+    if(fire_dash) sprite_index = SknightDS;
+    else sprite_index = SknightDS;
 }
 //dodging
 else if(STATE = STATE_DODGE)
@@ -250,7 +252,7 @@ else if (blocking) {
 //spell 1
 else if (spell1_active) {
     if(fire_spells) sprite_index = SknightSP1;
-    else sprite_index = SknightSP1;
+    else sprite_index = SknightATR;
     if (spell1_started) {
         image_index = 0;
         spell1_started = false;
@@ -259,7 +261,7 @@ else if (spell1_active) {
 //spell 2
 else if (spell2_active) {
     if(fire_spells) sprite_index = SFcabeSP2;
-    else sprite_index = ScabeSP2;
+    else sprite_index = SknightATS;
     if (spell2_started) {
         image_index = 0;
         spell2_started = false;
@@ -268,7 +270,7 @@ else if (spell2_active) {
 //spell 3
 else if (spell3_active) {
     if(fire_spells) sprite_index = SFcabeSP3;
-    else sprite_index = ScabeSP3;
+    else sprite_index = SknightJHL;
     if (spell3_started) {
         image_index = 0;
         spell3_started = false;
@@ -284,11 +286,22 @@ else if (sliding_ground) {
 }
 //air attack
 else if (attack_air) {
-    if(fire_mode) sprite_index = SknightJA1;
-    else sprite_index = SknightJA1;
+	sprite_index = SknightJA2;
     if (attack_air_started) {
         image_index = 0;
         attack_air_started = false;
+    }
+    // Create slash at frame 1
+    if (image_index >= 1 && !air_slash_created) {
+        air_slash_created = true;
+        with (instance_create_layer(x, y, "bullets", Oslash)) {
+            damage = 5 + (other.upgrade_attack * 2);
+            sprite_index = Sair_attack;
+            image_xscale = other.face;
+            heavy = false;
+        }
+        audio_sound_pitch(SNsword, random_range(1, 1.2));
+        audio_play_sound(SNsword, 1, false);
     }
 }
 //jumping
@@ -312,8 +325,7 @@ else if (!ground)
 }
 //charging hold attack (charging OR fully charged and waiting for release)
 else if (hold_time > 5) {
-    if(fire_mode) sprite_index = SknightAT2;
-    else sprite_index = SknightAT2;
+    sprite_index = SknightATH;
     // If fully charged, stay on last frame, otherwise frame 0
     if (hold_attack_charged) {
         image_index = 0; // Last frame
@@ -323,8 +335,7 @@ else if (hold_time > 5) {
 }
 //attack 1 (includes released hold attack)
 else if (attack1) {
-    if(fire_mode) sprite_index = SknightAT1;
-    else sprite_index = SknightAT1;
+	sprite_index = SknightAT1;
     if (attack1_started) {
         image_index = 0;
         attack1_started = false;
@@ -343,26 +354,46 @@ else if (attack1) {
         audio_play_sound(SNsword, 1, false);
     }
 }
-//attack 2
+//attack 2 (includes released hold attack)
 else if (attack2) {
-    if(fire_mode) sprite_index = SknightAT2;
-    else sprite_index = SknightAT2;
+    if (attack2_is_hold) {
+        if(fire_mode) sprite_index = SknightATH;
+        else sprite_index = SknightATH;
+    } else {
+        if(fire_mode) sprite_index = SknightAT2;
+        else sprite_index = SknightAT2;
+    }
     if (attack2_started) {
         image_index = 0;
         attack2_started = false;
     }
-    // Create slash at frame 3
-    if (image_index >= 3 && !light2_slash_created) {
-        light2_slash_created = true;
-        with (instance_create_layer(x, y, "bullets", Oslash)) {
-            damage = 5 + (other.upgrade_attack * 2);
-            sprite_index = Slight_attack2;
-            image_xscale = other.face;
-            heavy = false;
-            light_variant = 2;
+    if (attack2_is_hold) {
+        // Create hold slash at frame 1
+        if (image_index >= 1 && !hold_slash_created) {
+            hold_slash_created = true;
+            with (instance_create_layer(x, y, "bullets", Oslash)) {
+                damage = (5 + (other.upgrade_attack * 2)) * 2;
+                sprite_index = Shold_attack;
+                image_xscale = other.face;
+                heavy = false;
+            }
+            audio_sound_pitch(SNsword, random_range(0.8, 0.9));
+            audio_play_sound(SNsword, 1, false);
         }
-        audio_sound_pitch(SNsword, random_range(1, 1.2));
-        audio_play_sound(SNsword, 1, false);
+    } else {
+        // Create slash at frame 3
+        if (image_index >= 3 && !light2_slash_created) {
+            light2_slash_created = true;
+            with (instance_create_layer(x, y, "bullets", Oslash)) {
+                damage = 5 + (other.upgrade_attack * 2);
+                sprite_index = Slight_attack2;
+                image_xscale = other.face;
+                heavy = false;
+                light_variant = 2;
+            }
+            audio_sound_pitch(SNsword, random_range(1, 1.2));
+            audio_play_sound(SNsword, 1, false);
+        }
     }
 }
 //attack 3
@@ -417,17 +448,14 @@ else if (attack_heavy2) {
         attack_heavy2_started = false;
     }
     // Create slash at frame 3 (image_index >= 3)
-    if (image_index >= 3 && !heavy2_slash_created) {
+    if (image_index >= 7 && !heavy2_slash_created) {
         heavy2_slash_created = true;
         var _bladeX = face * 160;
-        with (instance_create_layer(x + _bladeX, y - 230, "bullets", Oslash)) {
+        with (instance_create_layer(x, y, "bullets", Oslash)) {
             damage = (5 + (other.upgrade_attack * 2)) * 1.8;
-            sprite_index = Sslash2;
-            image_xscale = other.face * 1.5;
-            image_angle += 25 * other.face;
-            image_yscale = 1.5;
+            sprite_index = Sheavy_attack1;
+            image_xscale = other.face;
             clinch = true;
-            image_blend = c_blue;
             heavy = true;
             heavy_variant = 1;
         }
@@ -441,17 +469,37 @@ else if (attack_heavy3) {
         attack_heavy3_started = false;
     }
     // Create slash at frame 3 (image_index >= 3)
-    if (image_index >= 3 && !heavy3_slash_created) {
+    if (image_index >= 6 && !heavy3_slash_created) {
         heavy3_slash_created = true;
         var _bladeX = face * 170;
-        with (instance_create_layer(x + _bladeX, y - 160, "bullets", Oslash)) {
+        with (instance_create_layer(x, y, "bullets", Oslash)) {
             damage = (5 + (other.upgrade_attack * 2)) * 1.8;
-            sprite_index = Sslash3;
-            image_xscale = other.face * 1.5;
-            image_blend = c_blue;
+            sprite_index = Sheavy_attack2;
+            image_xscale = other.face;
             heavy = true;
             heavy_variant = 2;
         }
+    }
+}
+//air attack
+else if (attack_air) {
+	sprite_index = SknightJA2;
+    if (attack_air_started) {
+        image_index = 0;
+        attack_air_started = false;
+    }
+    // Create slash at frame 1
+    if (image_index >= 1 && !air_slash_created) {
+        air_slash_created = true;
+        var _bladeX = face * 100;
+        with (instance_create_layer(x,y, "bullets", Oslash)) {
+            damage = 5 + (other.upgrade_attack * 2);
+            sprite_index = Sair_attack;
+            image_xscale = other.face;
+            heavy = false;
+        }
+        audio_sound_pitch(SNsword, random_range(1, 1.2));
+        audio_play_sound(SNsword, 1, false);
     }
 }
 //crouch attack 
@@ -462,14 +510,31 @@ else if (attack_crouch) {
         image_index = 0;
         attack_crouch_started = false;
     }
+    // Create slash at frame 5
+    if (image_index >= 5 && !crouch_slash_created) {
+        crouch_slash_created = true;
+        var _bladeX = face * 100;
+        with (instance_create_layer(x, y, "bullets", Oslash)) {
+            damage = 5 + (other.upgrade_attack * 2);
+            sprite_index = Scrouch_attack;
+            image_xscale = other.face;
+            heavy = false;
+        }
+        audio_sound_pitch(SNsword, random_range(1, 1.2));
+        audio_play_sound(SNsword, 1, false);
+    }
 }
+//crouch waling
+else if(crouching) and (hsp != 0) sprite_index = SknightCW;
 //crouching - NOW AFTER SLIDING
 else if (crouching) sprite_index = SknightC;
-//dashing
-else if(STATE = STATE_DASH)
-{
-    if(fire_dash) sprite_index = SknightDS;
-    else sprite_index = SknightDS;
+//skidding
+else if (skidding) {
+    sprite_index = SknightST;
+    if (image_index >= image_number - 1) {
+        skidding = false;
+        skid_cooldown = 5;
+    }
 }
 //running
 else if (abs(hsp) > 0) and (run)
