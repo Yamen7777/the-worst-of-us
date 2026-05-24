@@ -203,13 +203,13 @@ if place_meeting(x,y,Owall)
 }
 
 //crouching mask
-if(sprite_index == ScabeC) or (sprite_index == ScabeCA)
+if(sprite_index == SknightC) or (sprite_index == SknightCA) or (sprite_index == SknightCW) or (sprite_index == SknightCH) or (sprite_index == SknightCD)
 {
-	mask_index = ScabeC;
+	mask_index = SknightC;
 }
 else 
 {
-	mask_index = Scabe;
+	mask_index = Sknight;
 }
 // SPRITE CONTROL
 //fusing
@@ -220,23 +220,23 @@ if(STATE = STATE_FUSE)
 //death
 else if(STATE = STATE_DEAD)
 {
-    sprite_index = ScabeD;
+    sprite_index = SknightD;
 }
 //hitstun - PRIORITY: Show hit animation when taking damage (even if blocking button held)
 // This covers both normal hits and hits from behind while blocking
 else if (hitstun_time > 0 && !block_deflect)
 {
-    sprite_index = ScabeHT;
+    sprite_index = SknightHT;
 }
 //dodging
 else if(STATE = STATE_DODGE)
 {
-    sprite_index = Scabej2;
+    sprite_index = SknightDG;
 }
 //block deflect (successful block animation)
 else if (block_deflect) {
-    if(fire_defence) sprite_index = SFcabeBD;
-    else sprite_index = ScabeBD;
+    if(fire_defence) sprite_index = SknightBD;
+    else sprite_index = SknightBD;
     if (block_deflect_started) {
         image_index = 0;
         block_deflect_started = false;
@@ -244,13 +244,13 @@ else if (block_deflect) {
 }
 //blocking idle
 else if (blocking) {
-    if(fire_defence) sprite_index = SFcabeB;
-    else sprite_index = ScabeB;
+    if(fire_defence) sprite_index = SknightB;
+    else sprite_index = SknightB;
 }
 //spell 1
 else if (spell1_active) {
-    if(fire_spells) sprite_index = SFcabeSP1;
-    else sprite_index = ScabeSP1;
+    if(fire_spells) sprite_index = SknightSP1;
+    else sprite_index = SknightSP1;
     if (spell1_started) {
         image_index = 0;
         spell1_started = false;
@@ -276,7 +276,7 @@ else if (spell3_active) {
 }
 //sliding - MOVED BEFORE CROUCHING
 else if (sliding_ground) {
-    sprite_index = ScabeSL;
+    sprite_index = SknightSL;
     if (sliding_started) {
         image_index = 0;
         sliding_started = false;
@@ -284,8 +284,8 @@ else if (sliding_ground) {
 }
 //air attack
 else if (attack_air) {
-    if(fire_mode) sprite_index = SFcabeJA;
-    else sprite_index = ScabeJA;
+    if(fire_mode) sprite_index = SknightJA1;
+    else sprite_index = SknightJA1;
     if (attack_air_started) {
         image_index = 0;
         attack_air_started = false;
@@ -296,24 +296,24 @@ else if (!ground)
 {
     if(sliding)
     {
-        sprite_index = ScabeWJ;
+        sprite_index = SknightWS;
     }
     else
     {
         if(vsp < 0)
         {
-            sprite_index = ScabeJ;
+            sprite_index = SknightJU;
         }
         if(vsp > 0)
         {
-            sprite_index = Scabej2;
+            sprite_index = SknightJD;
         }
     }
 }
 //charging hold attack (charging OR fully charged and waiting for release)
 else if (hold_time > 5) {
-    if(fire_mode) sprite_index = SFcabeAT2;
-    else sprite_index = ScabeAT2;
+    if(fire_mode) sprite_index = SknightAT2;
+    else sprite_index = SknightAT2;
     // If fully charged, stay on last frame, otherwise frame 0
     if (hold_attack_charged) {
         image_index = 0; // Last frame
@@ -323,8 +323,8 @@ else if (hold_time > 5) {
 }
 //attack 1 (includes released hold attack)
 else if (attack1) {
-    if(fire_mode) sprite_index = SFcabeAT1;
-    else sprite_index = ScabeAT1;
+    if(fire_mode) sprite_index = SknightAT1;
+    else sprite_index = SknightAT1;
     if (attack1_started) {
         image_index = 0;
         attack1_started = false;
@@ -332,8 +332,8 @@ else if (attack1) {
 }
 //attack 2
 else if (attack2) {
-    if(fire_mode) sprite_index = SFcabeAT2;
-    else sprite_index = ScabeAT2;
+    if(fire_mode) sprite_index = SknightAT2;
+    else sprite_index = SknightAT2;
     if (attack2_started) {
         image_index = 0;
         attack2_started = false;
@@ -341,8 +341,8 @@ else if (attack2) {
 }
 //attack 3
 else if (attack3) {
-    if(fire_mode) sprite_index = SFcabeAT3;
-    else sprite_index = ScabeAT3;
+    if(fire_mode) sprite_index = SknightAT3;
+    else sprite_index = SknightAT3;
     if (attack3_started) {
         image_index = 0;
         attack3_started = false;
@@ -350,7 +350,7 @@ else if (attack3) {
 }
 //heavy attack 1 (now attack_heavy2)
 else if (attack_heavy2) {
-    sprite_index = ScabeHAT2;
+    sprite_index = SknightHAT1;
     if (attack_heavy2_started) {
         image_index = 0;
         attack_heavy2_started = false;
@@ -374,7 +374,7 @@ else if (attack_heavy2) {
 }
 //heavy attack 2 (now attack_heavy3)
 else if (attack_heavy3) {
-    sprite_index = ScabeHAT3;
+    sprite_index = SknightHAT2;
     if (attack_heavy3_started) {
         image_index = 0;
         attack_heavy3_started = false;
@@ -395,32 +395,32 @@ else if (attack_heavy3) {
 }
 //crouch attack 
 else if (attack_crouch) {
-    if(fire_mode) sprite_index = SFcabeCA;
-    else sprite_index = ScabeCA;
+    if(fire_mode) sprite_index = SknightCA;
+    else sprite_index = SknightCA;
     if (attack_crouch_started) {
         image_index = 0;
         attack_crouch_started = false;
     }
 }
 //crouching - NOW AFTER SLIDING
-else if (crouching) sprite_index = ScabeC;
+else if (crouching) sprite_index = SknightC;
 //dashing
 else if(STATE = STATE_DASH)
 {
-    if(fire_dash) sprite_index = SFcabeDS;
-    else sprite_index = ScabeDS;
+    if(fire_dash) sprite_index = SknightDS;
+    else sprite_index = SknightDS;
 }
 //running
 else if (abs(hsp) > 0) and (run)
 {
-    sprite_index = ScabeR;
+    sprite_index = SknightR;
 }
 //walking
 else if (abs(hsp) > 0)
 {
-    sprite_index = ScabeW;
+    sprite_index = SknightW;
 }
 //running
-else if (abs(hsp) >= walkSP[1]) sprite_index = ScabeW; 
+else if (abs(hsp) >= walkSP[1]) sprite_index = SknightW; 
 //no moving
-else if (hsp == 0) sprite_index = Scabe;
+else if (hsp == 0) sprite_index = Sknight;

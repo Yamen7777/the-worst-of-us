@@ -2768,7 +2768,7 @@ STATE_DEAD = function() {
     screenShake(20,6);
     
     //transition
-    if (image_index >= 10) and (sprite_index == ScabeD) and (!death_transition_done) {
+    if (image_index >= 27) and (sprite_index == SknightD) and (!death_transition_done) {
         death_transition_done = true;
         
         // UNDO LAST UPGRADE (go back one level) - but only if under death limit
