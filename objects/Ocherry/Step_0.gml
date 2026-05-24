@@ -329,6 +329,19 @@ else if (attack1) {
         image_index = 0;
         attack1_started = false;
     }
+    // Create slash at frame 7
+    if (image_index >= 7 && !light1_slash_created) {
+        light1_slash_created = true;
+        with (instance_create_layer(x, y, "bullets", Oslash)) {
+            damage = 5 + (other.upgrade_attack * 2);
+            sprite_index = Slight_attack1;
+            image_xscale = other.face;
+            heavy = false;
+            light_variant = 1;
+        }
+        audio_sound_pitch(SNsword, random_range(1, 1.2));
+        audio_play_sound(SNsword, 1, false);
+    }
 }
 //attack 2
 else if (attack2) {
@@ -338,6 +351,19 @@ else if (attack2) {
         image_index = 0;
         attack2_started = false;
     }
+    // Create slash at frame 3
+    if (image_index >= 3 && !light2_slash_created) {
+        light2_slash_created = true;
+        with (instance_create_layer(x, y, "bullets", Oslash)) {
+            damage = 5 + (other.upgrade_attack * 2);
+            sprite_index = Slight_attack2;
+            image_xscale = other.face;
+            heavy = false;
+            light_variant = 2;
+        }
+        audio_sound_pitch(SNsword, random_range(1, 1.2));
+        audio_play_sound(SNsword, 1, false);
+    }
 }
 //attack 3
 else if (attack3) {
@@ -346,6 +372,41 @@ else if (attack3) {
     if (attack3_started) {
         image_index = 0;
         attack3_started = false;
+    }
+    // Create slash at frame 3
+    if (image_index >= 3 && !light3_slash_created) {
+        light3_slash_created = true;
+        with (instance_create_layer(x, y, "bullets", Oslash)) {
+            damage = 5 + (other.upgrade_attack * 2);
+            sprite_index = Slight_attack3;
+            image_xscale = other.face;
+            heavy = false;
+            light_variant = 3;
+        }
+        audio_sound_pitch(SNsword, random_range(1, 1.2));
+        audio_play_sound(SNsword, 1, false);
+    }
+}
+//attack 4
+else if (attack4) {
+    if(fire_mode) sprite_index = SknightAT4;
+    else sprite_index = SknightAT4;
+    if (attack4_started) {
+        image_index = 0;
+        attack4_started = false;
+    }
+    // Create slash at frame 3
+    if (image_index >= 3 && !light4_slash_created) {
+        light4_slash_created = true;
+        with (instance_create_layer(x, y, "bullets", Oslash)) {
+            damage = 5 + (other.upgrade_attack * 2);
+            sprite_index = Slight_attack4;
+            image_xscale = other.face;
+            heavy = false;
+            light_variant = 4;
+        }
+        audio_sound_pitch(SNsword, random_range(1, 1.2));
+        audio_play_sound(SNsword, 1, false);
     }
 }
 //heavy attack 1 (now attack_heavy2)

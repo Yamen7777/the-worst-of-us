@@ -350,7 +350,6 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                 ds_list_add(damaged_by_list, damager);
                 invincible = true;
                 invincible_clear_timer = invincible_clear_timer;
-				HitStop(2);
             }
             // SPECIAL CASE 2: Ospinning_thorns - damage but no stun/knockback
             else if (obj_name == "Ospinning_thorns") {
@@ -368,7 +367,6 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     // Add to damaged list so it only hits once per thorn
                     ds_list_add(damaged_by_list, damager);
                     invincible_clear_timer = invincible_clear_time;
-					HitStop(1);
                     
                     // NO invincibility, NO knockback, NO sprite change, NO attack cancel
                 }
@@ -401,14 +399,6 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                         } else {
                             hsp = Ocherry.face * 1;
                         }
-                    } else if (variable_instance_exists(damager, "light_variant")) {
-                        // Check light variant for knockback
-                        if (damager.light_variant == 3) {
-                            // Light 3: knockback of 50
-                            hsp = Ocherry.face * 10;
-                        } else {
-                            hsp = Ocherry.face * 1;
-                        }
                     } else {
                         hsp = Ocherry.face * 1;
                     }
@@ -424,14 +414,6 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                         push_state = true;
                         push_state_timer = push_state_time;
                     }
-                    
-                    // Apply hitstop - freeze both player and enemy
-                    var _hitstop_duration = 9;
-                    if (variable_instance_exists(damager, "heavy") && damager.heavy == true) {
-                        // Heavy attack - longer hitstop
-                        _hitstop_duration = 11;
-                    }
-                    HitStop(_hitstop_duration);
 					
 					// Show that same damage number above head
 					show_damage_number(x, y, damager.damage, -370);

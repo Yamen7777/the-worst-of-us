@@ -111,10 +111,11 @@ dodge_buffer_time = 10;
 
 //attacking
 attack = false;
-attack1 = false;
-attack2 = false;
-attack3 = false;
-attack_crouch = false;
+	    attack1 = false;
+	    attack2 = false;
+	    attack3 = false;
+	    attack4 = false;
+	    attack_crouch = false;
 attack_air = false;
 attack_heavy2 = false;
 attack_heavy3 = false;
@@ -124,6 +125,7 @@ combo_window_timer = 0;
 attack1_started = false;
 attack2_started = false;
 attack3_started = false;
+attack4_started = false;
 attack2_is_hold = false;
 attack_crouch_started = false;
 attack_air_started = false;
@@ -131,6 +133,10 @@ attack_heavy2_started = false;
 attack_heavy3_started = false;
 heavy2_slash_created = false;
 heavy3_slash_created = false;
+light1_slash_created = false;
+light2_slash_created = false;
+light3_slash_created = false;
+light4_slash_created = false;
 
 light_attack_index = 0;
 heavy_attack_index = 0;
@@ -141,8 +147,8 @@ light_attack_reset_time = 60;
 
 queued_input = 0; // 0 = none, 1 = light, 2 = heavy
 
-attack_heavy2_duration = 30; // 10 frames at 20fps
-attack_heavy3_duration = 30; // 10 frames at 20fps
+attack_heavy2_duration = 45; // 15 frames at 20fps
+attack_heavy3_duration = 42; // 14 frames at 20fps
 crouch_attack = function() {
     var _bladeX = face * 60;
     var _sprite = fire_mode ? SslashFire1 : Sslash1;
@@ -221,39 +227,30 @@ light_attack = function(_attack_num) {
     var _forward_spd = 1;
     
     if (_attack_num == 1) {
-        _bladeX = face * 150;
-        _y_offset = -180;
-        _slash_sprite = fire_mode ? SslashFire1 : Sslash1;
+        _slash_sprite = Slight_attack1;
         _duration = attack1_duration;
     } else if (_attack_num == 2) {
-        _bladeX = face * 130;
-        _y_offset = -140;
-        _slash_sprite = fire_mode ? SslashFire2 : Sslash2;
+        _slash_sprite = Slight_attack2;
         _duration = attack2_duration;
     } else if (_attack_num == 3) {
-        _bladeX = face * 170;
-        _y_offset = -140;
-        _slash_sprite = fire_mode ? SslashFire3 : Sslash3;
+        _slash_sprite = Slight_attack3;
         _duration = attack3_duration;
+    } else if (_attack_num == 4) {
+        _slash_sprite = Slight_attack4;
+        _duration = attack4_duration;
     }
     
     attack_timer = _duration;
     
-    with (instance_create_layer(x + _bladeX, y + _y_offset, "bullets", Oslash)) {
-        damage = 5 + (other.upgrade_attack * 2);
-        sprite_index = _slash_sprite;
-        image_xscale = other.face;
-        if (_attack_num == 2) image_angle += 125 * other.face;
-        heavy = false;
-        light_variant = _attack_num;
-    }
+    if (_attack_num == 1) light1_slash_created = false;
+    else if (_attack_num == 2) light2_slash_created = false;
+    else if (_attack_num == 3) light3_slash_created = false;
+    else if (_attack_num == 4) light4_slash_created = false;
     
-    audio_sound_pitch(SNsword, random_range(1, 1.2));
-    audio_play_sound(SNsword, 1, false);
-    
-    // Only use dynamic speed for light attack 1, otherwise use fixed minimum
     if (_attack_num == 1) {
         hsp = face * get_enemy_forward_speed(_forward_spd, 5);
+    } else if (_attack_num == 4) {
+        hsp = face * get_enemy_forward_speed(_forward_spd, 6);
     } else {
         hsp = face * _forward_spd;
     }
@@ -309,10 +306,14 @@ start_light_attack = function(_num) {
         attack3 = true;
         attack3_started = true;
         light_attack(3);
+    } else if (_attack_num == 4) {
+        attack4 = true;
+        attack4_started = true;
+        light_attack(4);
     }
     
     light_attack_index++;
-    if (light_attack_index > 2) light_attack_index = 0;
+    if (light_attack_index > 3) light_attack_index = 0;
     heavy_attack_reset_timer = heavy_attack_reset_time;
     light_attack_reset_timer = light_attack_reset_time;
     light_attack_reset_timer = light_attack_reset_time;
@@ -379,9 +380,10 @@ get_enemy_forward_speed = function(_base_speed, _max_speed) {
     
     return _forward_speed;
 };
-attack1_duration = 18; // 6 frames at 20fps
-attack2_duration = 21; // 7 frames at 20fps
-attack3_duration = 27; // 9 frames at 20fps
+attack1_duration = 33; // 11 frames at 20fps
+attack2_duration = 27; // 9 frames at 20fps
+attack3_duration = 21; // 7 frames at 20fps
+attack4_duration = 27; // 9 frames at 20fps
 attack_crouch_duration = 22; // 5 frames at 15fps + 2
 attack_air_duration = 22; // 5 frames at 15fps + 2
 cooldown_duration = 2; // Cooldown after combo ends
@@ -996,6 +998,7 @@ STATE_FREE = function()
 		        attack1 = false;
 		        attack2 = false;
 		        attack3 = false;
+		        attack4 = false;
 		        attack_air = false;
 		        attack_heavy2 = false;
 		        attack_heavy3 = false;
@@ -1187,6 +1190,7 @@ STATE_FREE = function()
 	    attack1 = false;
 	    attack2 = false;
 	    attack3 = false;
+	    attack4 = false;
 	    attack_crouch = false;
 	    attack_heavy2 = false;
 	    attack_heavy3 = false;
@@ -1360,6 +1364,7 @@ STATE_FREE = function()
 	    attack1 = false;
 	    attack2 = false;
 	    attack3 = false;
+	    attack4 = false;
 	    attack_crouch = false;
 	    attack_air = false;
 	    attack_heavy2 = false;
@@ -1559,14 +1564,14 @@ STATE_FREE = function()
 	}
 
 	// Update main attack flag
-	attack = (attack1 || attack2 || attack3 || attack_crouch || attack_air || attack_heavy2 || attack_heavy3 || attack_timer > 0 && !dodging);
+	attack = (attack1 || attack2 || attack3 || attack4 || attack_crouch || attack_air || attack_heavy2 || attack_heavy3 || attack_timer > 0 && !dodging);
 
 	// COOLDOWN - Block all attacks
 	if (cooldown_timer > 0 || sliding_ground) {  // Added || sliding_ground
 	    // Can't attack during cooldown or slide
 	}
 	// CROUCH ATTACK
-	else if (crouching && ground && !attack1 && !attack2 && !attack3 && !attack_air && attack_timer == 0 && !sliding_ground && !dodging) {
+	else if (crouching && ground && !attack1 && !attack2 && !attack3 && !attack4 && !attack_air && attack_timer == 0 && !sliding_ground && !dodging) {
 	    if (LMB && !attack_crouch) {
 	        attack_crouch = true;
 	        attack_crouch_started = true;
@@ -1574,7 +1579,7 @@ STATE_FREE = function()
 	    }
 	}
 	// AIR ATTACK
-	else if (!ground && !attack1 && !attack2 && !attack3 && !attack_crouch && attack_timer == 0 && !dodging) {
+	else if (!ground && !attack1 && !attack2 && !attack3 && !attack4 && !attack_crouch && attack_timer == 0 && !dodging) {
 	    if (LMB && !attack_air) {
 	        attack_air = true;
 	        attack_air_started = true;
@@ -1582,7 +1587,7 @@ STATE_FREE = function()
 	    }
 	}
 	// IDLE - Can start attack 1
-	else if (!attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && attack_timer == 0 && cooldown_timer == 0 && !sliding_ground && !dodging) {
+	else if (!attack1 && !attack2 && !attack3 && !attack4 && !attack_crouch && !attack_air && attack_timer == 0 && cooldown_timer == 0 && !sliding_ground && !dodging) {
     
     // Charging up (single powerful attack)
     if (HLMB) and (ground) {
@@ -1617,7 +1622,7 @@ STATE_FREE = function()
     }
     
     // HEAVY ATTACK - using RMB
-    if (RMB && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && !attack_heavy2 && !attack_heavy3 && attack_timer == 0 && cooldown_timer == 0) {
+    if (RMB && !attack1 && !attack2 && !attack3 && !attack4 && !attack_crouch && !attack_air && !attack_heavy2 && !attack_heavy3 && attack_timer == 0 && cooldown_timer == 0) {
         start_heavy_attack(1);
     }
     
@@ -1676,6 +1681,19 @@ STATE_FREE = function()
 	    }
 	    queued_input = 0;
 	}
+
+	// ATTACK 4 FINISHED
+	if (attack4 && attack_timer == 0) {
+	    attack4 = false;
+	    if (queued_input == 1) {
+	        start_light_attack(1);
+	    } else if (queued_input == 2) {
+	        start_heavy_attack(1);
+	    } else {
+	        cooldown_timer = cooldown_duration;
+	    }
+	    queued_input = 0;
+	}
 	
 	// HEAVY ATTACK 1 (attack_heavy2) FINISHED
 	if (attack_heavy2 && attack_timer == 0) {
@@ -1714,10 +1732,10 @@ STATE_FREE = function()
 	if (spell3_cooldown > 0) spell3_cooldown--;
 
 	// Update attack flag to include spells
-	attack = (attack1 || attack2 || attack3 || attack_crouch || attack_air || attack_heavy2 || attack_heavy3 || spell1_active || spell2_active || spell3_active || attack_timer > 0);
+	attack = (attack1 || attack2 || attack3 || attack4 || attack_crouch || attack_air || attack_heavy2 || attack_heavy3 || spell1_active || spell2_active || spell3_active || attack_timer > 0);
 
 	// SPELL 1 - Q (Costs 50 blood) - UNLOCKED AT LEVEL 1
-	if (spell1 && !spell1_active && !spell2_active && !spell3_active && spell1_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 1) {
+	if (spell1 && !spell1_active && !spell2_active && !spell3_active && spell1_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack4 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 1) {
 	    // Check if player has enough blood
 	    if (instance_exists(ObloodPar) && ObloodPar.blood >= 50) {
 	        spell1_active = true;
@@ -1775,7 +1793,7 @@ STATE_FREE = function()
 	}
 
 	// SPELL 2 - E (Costs 75 blood) - UNLOCKED AT LEVEL 2
-	if (spell2 && !spell1_active && !spell2_active && !spell3_active && spell2_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 2) {
+	if (spell2 && !spell1_active && !spell2_active && !spell3_active && spell2_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack4 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 2) {
 	    // Check if player has enough blood
 	    if (instance_exists(ObloodPar) && ObloodPar.blood >= 75) {
 	        spell2_active = true;
@@ -1833,7 +1851,7 @@ STATE_FREE = function()
 	}
 
 	// SPELL 3 - R (Costs 100 blood) - UNLOCKED AT LEVEL 3
-	if (spell3 && !spell1_active && !spell2_active && !spell3_active && spell3_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 3) {
+	if (spell3 && !spell1_active && !spell2_active && !spell3_active && spell3_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack4 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 3) {
 	    // Check if player has enough blood
 	    if (instance_exists(ObloodPar) && ObloodPar.blood >= 100) {
 	        spell3_active = true;
@@ -2765,10 +2783,10 @@ STATE_DEAD = function() {
     grv = 0;
     
     //screen shake
-    screenShake(20,6);
+    screenShake(5,1);
     
     //transition
-    if (image_index >= 27) and (sprite_index == SknightD) and (!death_transition_done) {
+    if (image_index >= 25) and (sprite_index == SknightD) and (!death_transition_done) {
         death_transition_done = true;
         
         // UNDO LAST UPGRADE (go back one level) - but only if under death limit

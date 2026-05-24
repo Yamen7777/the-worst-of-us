@@ -12,6 +12,18 @@ if (_enemy != noone && !hitstop_triggered) {
     } else {
         HitStop(9);
     }
+    // Push enemy based on attack type
+    with (_enemy) {
+        if (other.light_variant == 4) {
+            hsp = Ocherry.face * 22;
+        } else if (other.heavy && other.heavy_variant == 2) {
+            hsp = Ocherry.face * 37;
+        }
+        if (variable_instance_exists(self, "push_state")) {
+            push_state = true;
+            push_state_timer = push_state_time;
+        }
+    }
 }
 
 if(image_index == 2) 

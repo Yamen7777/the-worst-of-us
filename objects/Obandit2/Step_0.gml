@@ -416,14 +416,6 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                         } else {
                             hsp = Ocherry.face * 1;
                         }
-                    } else if (variable_instance_exists(damager, "light_variant")) {
-                        // Check light variant for knockback
-                        if (damager.light_variant == 3) {
-                            // Light 3: knockback of 50
-                            hsp = Ocherry.face * 10;
-                        } else {
-                            hsp = Ocherry.face * 1;
-                        }
                     } else {
                         hsp = Ocherry.face * 1;
                     }

@@ -30,3 +30,5 @@ max_distance = 1000;
 _obstacle = [Owall, Ocherry];
 
 damage = 5;
+
+has_hit = false;
