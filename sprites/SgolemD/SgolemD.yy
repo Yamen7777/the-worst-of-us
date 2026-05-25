@@ -33,8 +33,8 @@
   "nineSlice":null,
   "origin":7,
   "parent":{
-    "name":"golem",
-    "path":"folders/Sprites/enemies/golem.yy",
+    "name":"golem flying",
+    "path":"folders/Sprites/enemies/golem flying.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",
