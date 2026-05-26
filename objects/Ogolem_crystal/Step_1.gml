@@ -48,5 +48,10 @@ if (hp <= 0)
 		_new_dead.push_state = true;
 		_new_dead.push_state_timer = _new_dead.push_state_time;
 	}
+	// Create blood effect at half the dead body's height
+	var _blood_y = (_new_dead.bbox_top + _new_dead.bbox_bottom) / 2;
+	instance_create_layer(x, _blood_y, "effects", Oblood);
+	audio_sound_pitch(SNsword, 0.6)
+	audio_play_sound(SNkill, 1, false);
 	instance_destroy();
 }

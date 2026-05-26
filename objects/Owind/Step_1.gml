@@ -40,10 +40,13 @@ if (hp <= 0)
 	    potion_inst.vsp = -8; // Upward launch
 	}
 	
-	with (instance_create_layer(x,y,layer,OwindD))
-	{
-		image_yscale = other.size;
-		image_xscale = other.image_xscale;
-	}
+	var _new_dead = instance_create_layer(x,y,layer,OwindD);
+	_new_dead.image_yscale = other.size;
+	_new_dead.image_xscale = other.image_xscale;
+	// Create blood effect at half the dead body's height
+	var _blood_y = (_new_dead.bbox_top + _new_dead.bbox_bottom) / 2;
+	instance_create_layer(x, _blood_y, "effects", Oblood);
+	audio_sound_pitch(SNsword, 0.6)
+	audio_play_sound(SNkill, 1, false);
 	instance_destroy();
 }

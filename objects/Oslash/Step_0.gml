@@ -7,6 +7,13 @@ image_speed = 1 * global.delta_time_scale;
 var _enemy = instance_place(x, y, Ojack);
 if (_enemy != noone && !hitstop_triggered) {
     hitstop_triggered = true;
+    // Create impact effect at collision point (clamp slash origin to enemy bbox)
+    var _impact_face = image_xscale;
+    var _impact_x = clamp(x, _enemy.bbox_left, _enemy.bbox_right);
+    var _impact_y = (_enemy.bbox_top + _enemy.bbox_bottom) / 2;
+    with (instance_create_layer(_impact_x, _impact_y, "effects", Oimpact)) {
+        image_xscale = _impact_face;
+    }
     if (heavy) {
         HitStop(13);
     } else {

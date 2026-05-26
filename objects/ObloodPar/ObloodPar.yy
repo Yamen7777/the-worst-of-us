@@ -33,8 +33,8 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"SbloodPar1",
-    "path":"sprites/SbloodPar1/SbloodPar1.yy",
+    "name":"SbloodPar1_1",
+    "path":"sprites/SbloodPar1_1/SbloodPar1_1.yy",
   },
   "spriteMaskId":null,
   "visible":true,
