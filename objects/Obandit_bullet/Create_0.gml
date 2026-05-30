@@ -9,8 +9,8 @@ if (instance_exists(Ocherry)) {
     // Calculate base direction toward target
     var base_direction = point_direction(x, y, target_x, target_y);
     
-    // Random angle tilt (-2 to +2 degrees)
-    var angle_tilt = random_range(-2, 2);
+    // Random angle tilt
+    var angle_tilt = random_range(-10, 10);
     
     // Final direction with tilt
     direction = base_direction + angle_tilt;

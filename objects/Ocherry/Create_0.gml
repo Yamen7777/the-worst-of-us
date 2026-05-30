@@ -113,14 +113,14 @@ dodge_buffer_time = 10;
 
 //attacking
 attack = false;
-	    attack1 = false;
-	    attack2 = false;
-	    attack3 = false;
-	    attack4 = false;
-	    attack_crouch = false;
+	attack1 = false;
+	attack2 = false;
+	attack3 = false;
+	attack4 = false;
+	attack_crouch = false;
 attack_air = false;
+attack_heavy1 = false;
 attack_heavy2 = false;
-attack_heavy3 = false;
 attack_timer = 0;
 cooldown_timer = 0;
 combo_window_timer = 0;
@@ -131,8 +131,8 @@ attack4_started = false;
 attack2_is_hold = false;
 attack_crouch_started = false;
 attack_air_started = false;
+attack_heavy1_started = false;
 attack_heavy2_started = false;
-attack_heavy3_started = false;
 heavy2_slash_created = false;
 heavy3_slash_created = false;
 light1_slash_created = false;
@@ -150,8 +150,8 @@ light_attack_reset_time = 60;
 
 queued_input = 0; // 0 = none, 1 = light, 2 = heavy
 
-attack_heavy2_duration = 45; // 15 frames at 20fps
-attack_heavy3_duration = 42; // 14 frames at 20fps
+attack_heavy1_duration = 45; // 15 frames at 20fps
+attack_heavy2_duration = 42; // 14 frames at 20fps
 crouch_attack = function() {
     var _bladeX = face * 60;
     var _sprite = fire_mode ? SslashFire1 : Sslash1;
@@ -238,13 +238,13 @@ heavy_attack = function(_attack_num) {
         _bladeX = face * 160;
         _y_offset = -230;
         _slash_sprite = Sslash2;
-        _duration = attack_heavy2_duration;
+        _duration = attack_heavy1_duration;
         heavy2_slash_created = false;
     } else if (_attack_num == 2) {
         _bladeX = face * 170;
         _y_offset = -160;
         _slash_sprite = Sslash3;
-        _duration = attack_heavy3_duration;
+        _duration = attack_heavy2_duration;
         heavy3_slash_created = false;
     }
     
@@ -296,12 +296,12 @@ start_heavy_attack = function(_num) {
     var _attack_num = heavy_attack_index + 1;
     
     if (_attack_num == 1) {
-        attack_heavy2 = true;
-        attack_heavy2_started = true;
+        attack_heavy1 = true;
+        attack_heavy1_started = true;
         heavy_attack(1);
     } else if (_attack_num == 2) {
-        attack_heavy3 = true;
-        attack_heavy3_started = true;
+        attack_heavy2 = true;
+        attack_heavy2_started = true;
         heavy_attack(2);
     }
     
@@ -973,8 +973,8 @@ STATE_FREE = function()
 		        attack3 = false;
 		        attack4 = false;
 		        attack_air = false;
+		        attack_heavy1 = false;
 		        attack_heavy2 = false;
-		        attack_heavy3 = false;
 		        attack_timer = 0;
 		        combo_window_timer = 0;
 		        queued_input = 0;
@@ -1177,8 +1177,8 @@ STATE_FREE = function()
 	    attack3 = false;
 	    attack4 = false;
 	    attack_crouch = false;
+	    attack_heavy1 = false;
 	    attack_heavy2 = false;
-	    attack_heavy3 = false;
 	    attack_timer = 0;
 	    combo_window_timer = 0;
 	    queued_input = 0;
@@ -1352,8 +1352,8 @@ STATE_FREE = function()
 	    attack4 = false;
 	    attack_crouch = false;
 	    attack_air = false;
+	    attack_heavy1 = false;
 	    attack_heavy2 = false;
-	    attack_heavy3 = false;
 	    attack_timer = 0;
 	    combo_window_timer = 0;
 	    queued_input = 0;
@@ -1546,7 +1546,7 @@ STATE_FREE = function()
 	}
 
 	// Update main attack flag
-	attack = (attack1 || attack2 || attack3 || attack4 || attack_crouch || attack_air || attack_heavy2 || attack_heavy3 || attack_timer > 0 && !dodging);
+	attack = (attack1 || attack2 || attack3 || attack4 || attack_crouch || attack_air || attack_heavy1 || attack_heavy2 || attack_timer > 0 && !dodging);
 
 	// COOLDOWN - Block all attacks
 	if (cooldown_timer > 0 || sliding_ground) {  // Added || sliding_ground
@@ -1608,7 +1608,7 @@ hold_slash_created = false;
     }
     
     // HEAVY ATTACK - using RMB
-    if (RMB && !attack1 && !attack2 && !attack3 && !attack4 && !attack_crouch && !attack_air && !attack_heavy2 && !attack_heavy3 && attack_timer == 0 && cooldown_timer == 0) {
+    if (RMB && !attack1 && !attack2 && !attack3 && !attack4 && !attack_crouch && !attack_air && !attack_heavy1 && !attack_heavy2 && attack_timer == 0 && cooldown_timer == 0) {
         start_heavy_attack(1);
     }
     
@@ -1681,9 +1681,9 @@ hold_slash_created = false;
 	    queued_input = 0;
 	}
 	
-	// HEAVY ATTACK 1 (attack_heavy2) FINISHED
-	if (attack_heavy2 && attack_timer == 0) {
-	    attack_heavy2 = false;
+	// HEAVY ATTACK 1 (attack_heavy1) FINISHED
+	if (attack_heavy1 && attack_timer == 0) {
+	    attack_heavy1 = false;
 	    if (queued_input == 1) {
 	        start_light_attack(1);
 	    } else if (queued_input == 2) {
@@ -1694,9 +1694,9 @@ hold_slash_created = false;
 	    queued_input = 0;
 	}
 	
-	// HEAVY ATTACK 2 (attack_heavy3) FINISHED
-	if (attack_heavy3 && attack_timer == 0) {
-	    attack_heavy3 = false;
+	// HEAVY ATTACK 2 (attack_heavy2) FINISHED
+	if (attack_heavy2 && attack_timer == 0) {
+	    attack_heavy2 = false;
 	    if (queued_input == 1) {
 	        start_light_attack(1);
 	    } else if (queued_input == 2) {
@@ -1718,7 +1718,7 @@ hold_slash_created = false;
 	if (spell3_cooldown > 0) spell3_cooldown--;
 
 	// Update attack flag to include spells
-	attack = (attack1 || attack2 || attack3 || attack4 || attack_crouch || attack_air || attack_heavy2 || attack_heavy3 || spell1_active || spell2_active || spell3_active || attack_timer > 0);
+	attack = (attack1 || attack2 || attack3 || attack4 || attack_crouch || attack_air || attack_heavy1 || attack_heavy2 || spell1_active || spell2_active || spell3_active || attack_timer > 0);
 
 	// SPELL 1 - Q (Costs 50 blood) - UNLOCKED AT LEVEL 1
 	if (spell1 && !spell1_active && !spell2_active && !spell3_active && spell1_cooldown == 0 && !attack1 && !attack2 && !attack3 && !attack4 && !attack_crouch && !attack_air && ground && !sliding_ground && upgrade_spell >= 1) {

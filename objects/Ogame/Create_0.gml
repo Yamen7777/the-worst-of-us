@@ -498,11 +498,17 @@ tutorial_max_steps = 4; // Total number of lessons
 // Tutorial completion flags
 tutorial_moved = false;
 tutorial_ran = false;
-tutorial_attacked = false;
-tutorial_strong_attacked = false;
-tutorial_blocked = false;
-tutorial_filled_meter = false;
+tutorial_light_attack = false;
+tutorial_hold_attacked = false;
+tutorial_heavy_attacked = false;
+tutorial_dodge = false;
+tutorial_combo = false;
 tutorial_complete = false;
+
+// Combo tracking
+combo_prev_attack = 0;
+combo_buffer_index = 0;
+combo_sequence = [1, 0, 0, 0, 1]; // heavy, light, light, light, heavy
 
 // Tutorial text positions (spread horizontally across the room)
 tutorial_base_y = 1900; // Y position for all text
@@ -520,10 +526,13 @@ start_tutorial = function() {
     // Reset all completion flags
     tutorial_moved = false;
     tutorial_ran = false;
-    tutorial_attacked = false;
-    tutorial_strong_attacked = false;
-    tutorial_blocked = false;
-    tutorial_filled_meter = false;
+    tutorial_light_attack = false;
+    tutorial_hold_attacked = false;
+    tutorial_heavy_attacked = false;
+    tutorial_dodge = false;
+    tutorial_combo = false;
+    combo_prev_attack = 0;
+    combo_buffer_index = 0;
     
     show_debug_message("Tutorial started");
 }
@@ -540,6 +549,7 @@ check_tutorial_progress = function() {
             tutorial_moved = true;
         }
 	}
+	// lesson 1: Running
     if (!tutorial_ran) {   
         // Check if player ran (Shift)
         if (Ocherry.run and Ocherry.hsp != 0) {
@@ -547,42 +557,69 @@ check_tutorial_progress = function() {
         }
     }
     
-    // Lesson 1: Attacking
-    if (!tutorial_attacked) {
-        // Check normal attack
-        if (Ocherry.attack3) {
-            tutorial_attacked = true;
+    // Lesson 2: light Attack
+    if (!tutorial_light_attack) {
+        // Check light attack
+        if (Ocherry.attack4) {
+            tutorial_light_attack = true;
         }
 	}
-    if (!tutorial_strong_attacked) {   
+	// Lesson 3: Hold Attack
+    if (!tutorial_hold_attacked) {   
         // Check strong attack (hold LMB)
         if (Ocherry.hold_attack) {
-            tutorial_strong_attacked = true;
+            tutorial_hold_attacked = true;
         }
     }
     
-    // Lesson 2: Blocking
-    if (!tutorial_blocked) {
-        if (Ocherry.blocking || Ocherry.block_deflect) {
-            tutorial_blocked = true;
+    // Lesson 4: heavy Attack
+    if (!tutorial_heavy_attacked) {
+        // Check heavy attack
+        if (Ocherry.attack_heavy2) {
+            tutorial_heavy_attacked = true;
         }
     }
     
-    // Lesson 3: Fill fire meter
-    if (!tutorial_filled_meter) {
-        // Check if blood bar is filling up
-        if (instance_exists(ObloodPar)) {
-            // Find the blood bar (sprite_index == SbloodPar2)
-            with (ObloodPar) {
-                if (sprite_index == SbloodPar2 && blood > 10) {
-                    other.tutorial_filled_meter = true;
-                }
-            }
+    // Lesson 5: Dodge
+    if (!tutorial_dodge) {
+        // Check Dodge
+        if (Ocherry.dodging) {
+            tutorial_dodge = true;
         }
     }
 	
+	// Lesson 6: Combo
+    if (!tutorial_combo) {
+        var _current_attack = 0;
+        if (Ocherry.attack1) _current_attack = 1;
+        else if (Ocherry.attack2) _current_attack = 2;
+        else if (Ocherry.attack3) _current_attack = 3;
+        else if (Ocherry.attack4) _current_attack = 4;
+        else if (Ocherry.attack_heavy1) _current_attack = 5;
+        else if (Ocherry.attack_heavy2) _current_attack = 6;
+        
+        if (_current_attack != combo_prev_attack && _current_attack != 0) {
+            var _attack_type = (_current_attack >= 5) ? 1 : 0;
+            
+            if (_attack_type == combo_sequence[combo_buffer_index]) {
+                combo_buffer_index++;
+            } else {
+                combo_buffer_index = 0;
+                if (_attack_type == combo_sequence[0]) {
+                    combo_buffer_index = 1;
+                }
+            }
+            
+            if (combo_buffer_index >= array_length(combo_sequence)) {
+                tutorial_combo = true;
+            }
+        }
+        
+        combo_prev_attack = _current_attack;
+    }
+	
 	// Lesson complete
-    if (tutorial_blocked and tutorial_filled_meter and tutorial_strong_attacked and tutorial_attacked and tutorial_ran and tutorial_moved) {
+    if (tutorial_moved and tutorial_ran and tutorial_light_attack and tutorial_hold_attacked and tutorial_heavy_attacked and tutorial_dodge and tutorial_combo) {
 		tutorial_complete = true;
     }
 }
@@ -607,29 +644,37 @@ draw_tutorial = function() {
     draw_set_color(lesson1_color);
     draw_text(1700, tutorial_base_y+400, "L2 \nSHIFT to run");
     
-    // Lesson 2: Attacking
-    var lesson2_complete = (tutorial_attacked);
+    // Lesson 2: light attack
+    var lesson2_complete = (tutorial_light_attack);
     var lesson2_color = lesson2_complete ? tutorial_color_complete : tutorial_color_incomplete;
     draw_set_color(lesson2_color);
-    draw_text(2500, tutorial_base_y, "R2 \nLMB 3 times to attack");
+    draw_text(2500, tutorial_base_y, "R1 \nLMB 4 times to light attack");
 	
 	// Lesson 3: Hold Attack
-    var lesson3_complete = (tutorial_strong_attacked);
+    var lesson3_complete = (tutorial_hold_attacked);
     var lesson3_color = lesson3_complete ? tutorial_color_complete : tutorial_color_incomplete;
     draw_set_color(lesson3_color);
-    draw_text(4000, tutorial_base_y, "hold R2 \nHold LMB for strong attack");
+    draw_text(4000, tutorial_base_y, "hold R1 \nHold LMB for charge attack");
     
-    // Lesson 4: Blocking
-    var lesson4_complete = tutorial_blocked;
+    // Lesson 4: heavy attack
+    var lesson4_complete = tutorial_heavy_attacked;
     var lesson4_color = lesson4_complete ? tutorial_color_complete : tutorial_color_incomplete;
     draw_set_color(lesson4_color);
-    draw_text(6000, tutorial_base_y, "Hold R1 \nHold RMB to block (doesn't block all damage)");
+    draw_text(5500, tutorial_base_y, "R2 \nRMB 2 times to heavy attack");
     
-    // Lesson 5: Fill meter
-    var lesson5_complete = tutorial_filled_meter;
+    // Lesson 5: Dodge
+    var lesson5_complete = tutorial_dodge;
     var lesson5_color = lesson5_complete ? tutorial_color_complete : tutorial_color_incomplete;
     draw_set_color(lesson5_color);
-    draw_text(8300, tutorial_base_y+65, "Hit enemies or players to fill your fire meter");
+    draw_text(7000, tutorial_base_y, "O \nF to Dodge");
+	draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+	
+    // Lesson 6: combo
+    var lesson5_complete = tutorial_combo;
+    var lesson5_color = lesson5_complete ? tutorial_color_complete : tutorial_color_incomplete;
+    draw_set_color(lesson5_color);
+    draw_text(7800, tutorial_base_y, "try a (heavy, light, light, light, heavy) combo");
 	draw_set_halign(fa_left);
     draw_set_valign(fa_top);
 }

@@ -440,12 +440,12 @@ else if (attack4) {
         audio_play_sound(SNsword, 1, false);
     }
 }
-//heavy attack 1 (now attack_heavy2)
-else if (attack_heavy2) {
+//heavy attack 1 (now attack_heavy1)
+else if (attack_heavy1) {
     sprite_index = SknightHAT1;
-    if (attack_heavy2_started) {
+    if (attack_heavy1_started) {
         image_index = 0;
-        attack_heavy2_started = false;
+        attack_heavy1_started = false;
     }
     // Create slash at frame 3 (image_index >= 3)
     if (image_index >= 7 && !heavy2_slash_created) {
@@ -461,12 +461,12 @@ else if (attack_heavy2) {
         }
     }
 }
-//heavy attack 2 (now attack_heavy3)
-else if (attack_heavy3) {
+//heavy attack 2 (now attack_heavy2)
+else if (attack_heavy2) {
     sprite_index = SknightHAT2;
-    if (attack_heavy3_started) {
+    if (attack_heavy2_started) {
         image_index = 0;
-        attack_heavy3_started = false;
+        attack_heavy2_started = false;
     }
     // Create slash at frame 3 (image_index >= 3)
     if (image_index >= 6 && !heavy3_slash_created) {

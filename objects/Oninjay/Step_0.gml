@@ -1,4 +1,20 @@
 //Ojack step
+// Preemptive heavy dodge check - handles BEFORE physics/knockback
+if (!invincible) {
+    var _dodge_slash = instance_place(x, y, Oslash);
+    if (_dodge_slash != noone && variable_instance_exists(_dodge_slash, "heavy") && _dodge_slash.heavy) {
+        if (ds_list_find_index(damaged_by_list, _dodge_slash) == -1) {
+            hsp = -face * 20;
+            push_state = true;
+            push_state_timer = push_state_time;
+            show_damage_number(x, y, 0, -370, "dodge");
+            ds_list_add(damaged_by_list, _dodge_slash);
+            invincible = true;
+            invincible_clear_timer = invincible_clear_time;
+        }
+    }
+}
+
  vsp = vsp + (grv * global.delta_time_scale);
  vsp *= global.delta_time_scale;
  image_speed = 1 * global.delta_time_scale;
@@ -368,7 +384,7 @@ for (var i = 0; i < array_length(damage_objects); i++) {
                     ObloodPar.blood += damager.damage;
                 }
                 // Visual feedback but no stun
-                hsp = Ocherry.face * 5; // Knockback
+                hsp = face * 5; // Knockback
 				 
 				// Show that same damage number above head
 				show_damage_number(x, y, damager.damage, -370);
@@ -407,48 +423,30 @@ for (var i = 0; i < array_length(damage_objects); i++) {
             // NORMAL CASE: All other damage sources
             else {
                 if (ds_list_find_index(damaged_by_list, damager) == -1) {
-                    hp -= damager.damage;
-                    if (instance_exists(ObloodPar) && !is_fire_attack) {
-                        ObloodPar.blood += damager.damage;
-                    }
-                    
-                    // Don't cancel attack - Ogolem completes his attack even when hit
-                    // Ogolem is unbreakable during attack sequence
-                    
-                    // Check variant for different knockback
+                    // HEAVY ATTACK: Oninjay dodges
                     if (variable_instance_exists(damager, "heavy") && damager.heavy == true) {
-                        // Heavy attacks
-                        if (variable_instance_exists(damager, "heavy_variant")) {
-                            if (damager.heavy_variant == 1) {
-                                // Heavy 1: small forward knockback
-                                hsp = 0;
-                            } else if (damager.heavy_variant == 2) {
-                                // Heavy 2: double knockback (push further)
-                                hsp = Ocherry.face * 30;
-                            } else {
-                                hsp = Ocherry.face * 1;
-                            }
-                        } else {
-                            hsp = Ocherry.face * 1;
-                        }
-                    } else {
-                        hsp = Ocherry.face * 1;
-                    }
-                    
-                    // Apply clinch if this is a clinch attack
-                    if (variable_instance_exists(damager, "clinch") && damager.clinch == true) {
-                        clinched = true;
-                        clinch_timer = 30;
-                    }
-                    
-                    // Apply push state if there's knockback
-                    if (abs(hsp) >= 1) {
+                        hsp = -Ocherry.face * 50;
                         push_state = true;
                         push_state_timer = push_state_time;
+                        show_damage_number(x, y, 0, -370, "dodge");
+                    } else {
+                        hp -= damager.damage;
+                        if (instance_exists(ObloodPar) && !is_fire_attack) {
+                            ObloodPar.blood += damager.damage;
+                        }
+                        hsp = Ocherry.face * 1;
+                        if (abs(hsp) >= 1) {
+                            push_state = true;
+                            push_state_timer = push_state_time;
+                        }
+                        show_damage_number(x, y, damager.damage, -370);
+                        
+                        // Apply clinch if this is a clinch attack
+                        if (variable_instance_exists(damager, "clinch") && damager.clinch == true) {
+                            clinched = true;
+                            clinch_timer = 30;
+                        }
                     }
-                    
-                    // Show that same damage number above head
-					show_damage_number(x, y, damager.damage, -370);
                     
                     ds_list_add(damaged_by_list, damager);
                     invincible = true;

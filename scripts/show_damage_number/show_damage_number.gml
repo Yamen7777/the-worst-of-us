@@ -24,6 +24,10 @@ function show_damage_number(_x, _y, _amount, _y_offset, _type = "damage") {
                 damage_value = "BLOCK";
                 display_color = c_gray;
                 break;
+            case "dodge":
+                damage_value = "DODGE";
+                display_color = c_aqua;
+                break;
         }
     }
 }
